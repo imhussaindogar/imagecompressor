@@ -5,76 +5,277 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Multiple Image Optimizer</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 1000px;
-      margin: 20px auto;
-      padding: 20px;
-      text-align: center;
-    }
-    h1 {
-      color: #333;
-    }
-    #upload, #format {
-      margin: 10px 0;
-    }
-    .preview-container {
-      display: flex;
-      flex-direction: column;
-      margin: 20px 0;
-    }
-    .preview {
-      margin-bottom: 20px;
-      border: 1px solid #ddd;
-      padding: 15px;
-      background-color: #f9f9f9;
-    }
-    .image-pair {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-    .image-pair div {
-      width: 48%;
-      text-align: center;
-    }
-    img {
-      max-width: 100%;
-      height: auto;
-      border: 1px solid #ccc;
-    }
-    #quality {
-      width: 200px;
-      margin: 10px;
-    }
-    select, button {
-      padding: 10px;
-      margin: 10px;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button {
-      background-color: #28a745;
-      color: white;
-      border: none;
-    }
-    button:hover {
-      background-color: #218838;
-    }
-    #error {
-      color: red;
-      display: none;
-      margin: 10px 0;
-    }
-    .image-info {
-      margin: 5px 0;
-      font-size: 14px;
-      color: #555;
-    }
+/* Dark Theme CSS for Image Optimizer */
+:root {
+  --bg-color: #1e1e1e;
+  --card-bg: #2d2d2d;
+  --input-bg: #3a3a3a;
+  --text-color: #e0e0e0;
+  --text-highlight: #ffffff;
+  --accent-green: #28a745;
+  --accent-green-hover: #218838;
+  --error-red: #ff4d4d;
+  --border-color: #444444;
+  --shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  max-width: 1000px;
+  margin: 20px auto;
+  padding: 20px;
+  line-height: 1.5;
+}
+
+h1 {
+  color: var(--text-highlight);
+  font-size: 2rem;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+#upload, #format, #quality {
+  margin: 15px 0;
+}
+
+#upload {
+  display: none; /* Hide default file input */
+}
+
+.upload-label {
+  display: inline-block;
+  padding: 12px 24px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.upload-label:hover {
+  background-color: #444444;
+  transform: translateY(-1px);
+}
+
+.upload-label:active {
+  transform: translateY(0);
+}
+
+label {
+  font-size: 1rem;
+  color: var(--text-color);
+  margin-right: 10px;
+}
+
+select {
+  padding: 10px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+select:hover, select:focus {
+  border-color: var(--accent-green);
+  outline: none;
+}
+
+#quality {
+  width: 200px;
+  height: 8px;
+  background: var(--input-bg);
+  border-radius: 4px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+#quality::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--accent-green);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#quality::-webkit-slider-thumb:hover {
+  background: var(--accent-green-hover);
+}
+
+#quality::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--accent-green);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+#quality::-moz-range-thumb:hover {
+  background: var(--accent-green-hover);
+}
+
+#qualityValue {
+  font-size: 1rem;
+  color: var(--text-highlight);
+}
+
+button {
+  padding: 12px 24px;
+  background-color: var(--accent-green);
+  color: var(--text-highlight);
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+button:hover {
+  background-color: var(--accent-green-hover);
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+#error {
+  color: var(--error-red);
+  display: none;
+  margin: 15px 0;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.preview-container {
+  display: flex;
+  flex-direction: column;
+  margin: 20px 0;
+}
+
+.preview {
+  margin-bottom: 20px;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+  transition: transform 0.2s;
+}
+
+.preview:hover {
+  transform: translateY(-2px);
+}
+
+.preview h3 {
+  color: var(--text-highlight);
+  font-size: 1.25rem;
+  margin-bottom: 15px;
+}
+
+.image-pair {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.image-pair div {
+  width: 48%;
+  text-align: center;
+}
+
+.image-pair h4 {
+  color: var(--text-color);
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.image-info {
+  margin: 10px 0;
+  font-size: 0.9rem;
+  color: var(--text-color);
+}
+
+#downloadAll {
+  margin-top: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  body {
+    padding: 15px;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .image-pair {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .image-pair div {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+
+  .preview {
+    padding: 15px;
+  }
+
+  button, .upload-label, select {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  #quality {
+    width: 150px;
+  }
+
+  label, #qualityValue {
+    font-size: 0.9rem;
+  }
+
+  .preview h3 {
+    font-size: 1.1rem;
+  }
+
+  .image-info {
+    font-size: 0.85rem;
+  }
+}
   </style>
 </head>
 <body>
   <h1>Multiple Image Optimizer</h1>
+  <label for="upload" class="upload-label">Choose Images</label>
   <input type="file" id="upload" accept="image/jpeg,image/png" multiple />
   <div>
     <label for="format">Output Format:</label>
