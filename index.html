@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multiple Image Optimizer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1000px;
+      margin: 20px auto;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+    }
+    #upload, #format {
+      margin: 10px 0;
+    }
+    .preview-container {
+      display: flex;
+      flex-direction: column;
+      margin: 20px 0;
+    }
+    .preview {
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
+      padding: 15px;
+      background-color: #f9f9f9;
+    }
+    .image-pair {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .image-pair div {
+      width: 48%;
+      text-align: center;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid #ccc;
+    }
+    #quality {
+      width: 200px;
+      margin: 10px;
+    }
+    select, button {
+      padding: 10px;
+      margin: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    #error {
+      color: red;
+      display: none;
+      margin: 10px 0;
+    }
+    .image-info {
+      margin: 5px 0;
+      font-size: 14px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h1>Multiple Image Optimizer</h1>
+  <input type="file" id="upload" accept="image/jpeg,image/png" multiple />
+  <div>
+    <label for="format">Output Format:</label>
+    <select id="format">
+      <option value="image/jpeg">JPEG</option>
+      <option value="image/png">PNG</option>
+      <option value="image/webp" selected>WebP</option>
+    </select>
+  </div>
+  <div>
+    <label for="quality">Compression Quality (10% - 100%, for JPEG/WebP):</label>
+    <input type="range" id="quality" min="10" max="100" step="10" value="80" />
+    <span id="qualityValue">80%</span>
+  </div>
+  <button onclick="optimizeImages()">Optimize Images</button>
+  <div id="error"></div>
+  <div class="preview-container" id="previewContainer"></div>
+  <button id="downloadAll" style="display: none;" onclick="downloadAllImages()">Download All as ZIP</button>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script>
+    const uploadInput = document.getElementById('upload');
+    const formatSelect = document.getElementById('format');
+    const qualityInput = document.getElementById('quality');
+    const qualityValue = document.getElementById('qualityValue');
+    const previewContainer = document.getElementById('previewContainer');
+    const downloadAllButton = document.getElementById('downloadAll');
+    const error = document.getElementById('error');
+    let optimizedBlobs = [];
+
+    qualityInput.addEventListener('input', () => {
+      qualityValue.textContent = `${qualityInput.value}%`;
+    });
+
+    uploadInput.addEventListener('change', () => {
+      const files = Array.from(uploadInput.files);
+      if (files.length === 0) {
+        showError('No images selected.');
+        return;
+      }
+      if (!files.every(file => file.type.match('image/jpeg|image/png'))) {
+        showError('Please upload only JPEG or PNG images.');
+        return;
+      }
+      clearError();
+      previewContainer.innerHTML = '';
+      optimizedBlobs = [];
+      downloadAllButton.style.display = 'none';
+
+      files.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const fileFormat = file.type.split('/')[1].toUpperCase();
+          const previewDiv = document.createElement('div');
+          previewDiv.className = 'preview';
+          previewDiv.innerHTML = `
+            <h3>Image ${index + 1}: ${file.name}</h3>
+            <div class="image-pair">
+              <div>
+                <h4>Original</h4>
+                <img src="${reader.result}" alt="Original Image ${index + 1}" />
+                <p class="image-info">Original: ${fileFormat}, ${(file.size / 1024).toFixed(2)} KB</p>
+              </div>
+              <div>
+                <h4>Optimized</h4>
+                <img id="optimizedPreview${index}" alt="Optimized Image ${index + 1}" />
+                <p id="optimizedSize${index}" class="image-info"></p>
+              </div>
+            </div>
+          `;
+          previewContainer.appendChild(previewDiv);
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    function optimizeImages() {
+      const files = Array.from(uploadInput.files);
+      if (files.length === 0) {
+        showError('No images selected.');
+        return;
+      }
+
+      const outputFormat = formatSelect.value;
+      let extension, formatName;
+      switch (outputFormat) {
+        case 'image/jpeg':
+          extension = '.jpg';
+          formatName = 'JPEG';
+          break;
+        case 'image/png':
+          extension = '.png';
+          formatName = 'PNG';
+          break;
+        case 'image/webp':
+          extension = '.webp';
+          formatName = 'WebP';
+          break;
+        default:
+          extension = '.webp';
+          formatName = 'WebP';
+      }
+
+      // Check WebP support
+      if (outputFormat === 'image/webp') {
+        const canvas = document.createElement('canvas');
+        if (!canvas.toDataURL('image/webp').startsWith('data:image/webp')) {
+          showError('Your browser does not support WebP output.');
+          return;
+        }
+      }
+
+      optimizedBlobs = [];
+      files.forEach((file, index) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+
+          const quality = outputFormat === 'image/png' ? undefined : parseFloat(qualityInput.value) / 100;
+          let optimizedDataUrl;
+          try {
+            optimizedDataUrl = canvas.toDataURL(outputFormat, quality);
+          } catch (e) {
+            showError(`Failed to optimize image ${file.name}: ${e.message}`);
+            return;
+          }
+
+          const binary = atob(optimizedDataUrl.split(',')[1]);
+          const array = new Uint8Array(binary.length);
+          for (let i = 0; i < binary.length; i++) {
+            array[i] = binary.charCodeAt(i);
+          }
+          const blob = new Blob([array], { type: outputFormat });
+          const optimizedName = `optimized_${file.name.split('.')[0]}${extension}`;
+          optimizedBlobs.push({ blob, name: optimizedName });
+
+          const optimizedPreview = document.getElementById(`optimizedPreview${index}`);
+          const optimizedSize = document.getElementById(`optimizedSize${index}`);
+          optimizedPreview.src = optimizedDataUrl;
+          optimizedSize.textContent = `Optimized: ${formatName}, ${(blob.size / 1024).toFixed(2)} KB`;
+
+          if (optimizedBlobs.length === files.length) {
+            downloadAllButton.style.display = 'block';
+          }
+        };
+        img.onerror = () => {
+          showError(`Failed to load image ${file.name}.`);
+        };
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
+    function downloadAllImages() {
+      const zip = new JSZip();
+      optimizedBlobs.forEach(({ blob, name }) => {
+        zip.file(name, blob);
+      });
+
+      zip.generateAsync({ type: 'blob' }).then(content => {
+        saveAs(content, 'optimized_images.zip');
+      });
+    }
+
+    function showError(message) {
+      error.textContent = message;
+      error.style.display = 'block';
+    }
+
+    function clearError() {
+      error.style.display = 'none';
+      error.textContent = '';
+    }
+  </script>
+</body>
+</html>
