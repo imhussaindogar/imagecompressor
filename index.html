@@ -42,6 +42,26 @@ h1 {
   text-align: center;
 }
 
+#dropZone {
+  border: 2px dashed var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+  margin: 15px 0;
+  text-align: center;
+  background-color: var(--card-bg);
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+#dropZone.dragover {
+  border-color: var(--accent-green);
+  background-color: #3a3a3a;
+}
+
+#dropZone p {
+  font-size: 1rem;
+  color: var(--text-color);
+}
+
 #upload, #format, #quality {
   margin: 15px 0;
 }
@@ -154,6 +174,19 @@ button:active {
   transform: translateY(0);
 }
 
+.download-link {
+  color: var(--accent-green);
+  text-decoration: none;
+  font-size: 0.9rem;
+  margin-left: 10px;
+  transition: color 0.2s;
+}
+
+.download-link:hover {
+  color: var(--accent-green-hover);
+  text-decoration: underline;
+}
+
 #error {
   color: var(--error-red);
   display: none;
@@ -218,6 +251,9 @@ img {
   margin: 10px 0;
   font-size: 0.9rem;
   color: var(--text-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #downloadAll {
@@ -248,6 +284,10 @@ img {
     padding: 15px;
   }
 
+  #dropZone {
+    padding: 15px;
+  }
+
   button, .upload-label, select {
     padding: 10px 20px;
     font-size: 0.9rem;
@@ -269,14 +309,23 @@ img {
 
   .image-info {
     font-size: 0.85rem;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .download-link {
+    margin-left: 0;
   }
 }
   </style>
 </head>
 <body>
   <h1>Multiple Image Optimizer</h1>
-  <label for="upload" class="upload-label">Choose Images</label>
-  <input type="file" id="upload" accept="image/jpeg,image/png" multiple />
+  <div id="dropZone">
+    <p>Drag & Drop Images Here or Click to Select</p>
+    <label for="upload" class="upload-label">Choose Images</label>
+    <input type="file" id="upload" accept="image/jpeg,image/png" multiple />
+  </div>
   <div>
     <label for="format">Output Format:</label>
     <select id="format">
@@ -299,6 +348,7 @@ img {
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <script>
     const uploadInput = document.getElementById('upload');
+    const dropZone = document.getElementById('dropZone');
     const formatSelect = document.getElementById('format');
     const qualityInput = document.getElementById('quality');
     const qualityValue = document.getElementById('qualityValue');
@@ -311,8 +361,30 @@ img {
       qualityValue.textContent = `${qualityInput.value}%`;
     });
 
+    // Drag and Drop Events
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      const files = Array.from(e.dataTransfer.files);
+      handleFiles(files);
+    });
+
+    // File Input Change Event
     uploadInput.addEventListener('change', () => {
       const files = Array.from(uploadInput.files);
+      handleFiles(files);
+    });
+
+    function handleFiles(files) {
       if (files.length === 0) {
         showError('No images selected.');
         return;
@@ -344,6 +416,7 @@ img {
                 <h4>Optimized</h4>
                 <img id="optimizedPreview${index}" alt="Optimized Image ${index + 1}" />
                 <p id="optimizedSize${index}" class="image-info"></p>
+                <a id="downloadLink${index}" class="download-link" style="display: none;">Download</a>
               </div>
             </div>
           `;
@@ -351,11 +424,11 @@ img {
         };
         reader.readAsDataURL(file);
       });
-    });
+    }
 
     function optimizeImages() {
-      const files = Array.from(uploadInput.files);
-      if (files.length === 0) {
+      const files = optimizedBlobs.length > 0 ? optimizedBlobs.map(b => ({ name: b.name, type: b.blob.type })) : Array.from(uploadInput.files);
+      if (files.length === 0 && optimizedBlobs.length === 0) {
         showError('No images selected.');
         return;
       }
@@ -414,13 +487,17 @@ img {
             array[i] = binary.charCodeAt(i);
           }
           const blob = new Blob([array], { type: outputFormat });
-          const optimizedName = `optimized_${file.name.split('.')[0]}${extension}`;
+          const optimizedName = file.name.split('.').slice(0, -1).join('.') + extension;
           optimizedBlobs.push({ blob, name: optimizedName });
 
           const optimizedPreview = document.getElementById(`optimizedPreview${index}`);
           const optimizedSize = document.getElementById(`optimizedSize${index}`);
+          const downloadLink = document.getElementById(`downloadLink${index}`);
           optimizedPreview.src = optimizedDataUrl;
           optimizedSize.textContent = `Optimized: ${formatName}, ${(blob.size / 1024).toFixed(2)} KB`;
+          downloadLink.href = URL.createObjectURL(blob);
+          downloadLink.download = optimizedName;
+          downloadLink.style.display = 'inline';
 
           if (optimizedBlobs.length === files.length) {
             downloadAllButton.style.display = 'block';
@@ -429,7 +506,7 @@ img {
         img.onerror = () => {
           showError(`Failed to load image ${file.name}.`);
         };
-        img.src = URL.createObjectURL(file);
+        img.src = optimizedBlobs.length > 0 ? URL.createObjectURL(file.blob) : URL.createObjectURL(file);
       });
     }
 
