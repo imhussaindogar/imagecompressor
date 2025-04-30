@@ -324,7 +324,7 @@ img {
   <div id="dropZone">
     <p>Drag & Drop Images Here or Click to Select</p>
     <label for="upload" class="upload-label">Choose Images</label>
-    <input type="file" id="upload" accept="image/jpeg,image/png" multiple />
+    <input type="file" id="upload" accept="image/jpeg,image/png,image/webp" multiple />
   </div>
   <div>
     <label for="format">Output Format:</label>
@@ -389,8 +389,8 @@ img {
         showError('No images selected.');
         return;
       }
-      if (!files.every(file => file.type.match('image/jpeg|image/png'))) {
-        showError('Please upload only JPEG or PNG images.');
+      if (!files.every(file => file.type.match('image/jpeg|image/png|image/webp'))) {
+        showError('Please upload only JPEG, PNG, or WebP images.');
         return;
       }
       clearError();
@@ -427,8 +427,8 @@ img {
     }
 
     function optimizeImages() {
-      const files = optimizedBlobs.length > 0 ? optimizedBlobs.map(b => ({ name: b.name, type: b.blob.type })) : Array.from(uploadInput.files);
-      if (files.length === 0 && optimizedBlobs.length === 0) {
+      const files = Array.from(uploadInput.files);
+      if (files.length === 0) {
         showError('No images selected.');
         return;
       }
@@ -506,7 +506,7 @@ img {
         img.onerror = () => {
           showError(`Failed to load image ${file.name}.`);
         };
-        img.src = optimizedBlobs.length > 0 ? URL.createObjectURL(file.blob) : URL.createObjectURL(file);
+        img.src = URL.createObjectURL(file);
       });
     }
 
