@@ -3,445 +3,745 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Multiple Image Optimizer — Bulk URLs + Upload</title>
+<title>Multiple Image Optimizer — Upload + Bulk URLs (Light/Dark)</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <style>
-:root{
-  --bg:#1e1e1e;--card:#2d2d2d;--input:#3a3a3a;--text:#e0e0e0;--highlight:#fff;--green:#28a745;--greenh:#218838;--err:#ff4d4d;--border:#444;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Inter,system-ui,Arial,sans-serif;background:var(--bg);color:var(--text);max-width:1100px;margin:20px auto;padding:20px}
-h1{text-align:center;color:var(--highlight);margin-bottom:18px}
-#dropZone{border:2px dashed var(--border);border-radius:8px;padding:20px;margin:10px 0;background:var(--card);text-align:center;cursor:pointer}
-#dropZone.dragover{border-color:var(--green);background:#3a3a3a}
-.upload-label{display:inline-block;padding:10px 18px;background:var(--input);color:var(--text);border-radius:6px;border:1px solid var(--border);cursor:pointer;margin-top:8px}
-.controls{display:flex;gap:12px;align-items:center;margin:12px 0;flex-wrap:wrap}
-select,input[type="range"]{background:var(--input);color:var(--text);border:1px solid var(--border);padding:8px;border-radius:6px}
-#quality{width:220px}
-button{padding:10px 16px;border-radius:6px;border:none;background:var(--green);color:var(--highlight);cursor:pointer}
-button:hover{background:var(--greenh)}
-.preview-container{display:flex;flex-direction:column;gap:16px;margin-top:18px}
-.preview{background:var(--card);border:1px solid var(--border);padding:14px;border-radius:8px;box-shadow:0 4px 8px rgba(0,0,0,0.25)}
-.image-pair{display:flex;gap:16px;flex-wrap:wrap}
-.image-pair div{flex:1;min-width:220px;text-align:center}
-img{max-width:100%;height:auto;border-radius:6px;border:1px solid var(--border)}
-.image-info{font-size:0.9rem;color:var(--text);margin-top:8px}
-.download-link{color:var(--green);text-decoration:none;margin-left:8px}
-#error{color:var(--err);display:none;margin-top:12px;text-align:center}
-#urlArea{width:100%;height:100px;background:var(--input);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px;resize:vertical}
-.small{font-size:0.9rem;color:var(--text)}
-.flex-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-#downloadAll{display:none;margin-top:12px}
-.file-input-hidden{display:none}
-@media(max-width:700px){.image-pair{flex-direction:column}}
+  /* ---------- Fonts & reset ---------- */
+  @font-face {
+    font-family: "InterVar";
+    src: local("Inter"), local("Inter var");
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html,body { height: 100%; }
+
+  /* ---------- Theme variables (light & dark) ---------- */
+  :root {
+    --bg: #f5f7fb;
+    --card: #ffffff;
+    --muted: #6b7280;
+    --text: #111827;
+    --accent: #115e59;
+    --accent-2: #10b981;
+    --danger: #dc2626;
+    --border: #e6e9ef;
+    --shadow: 0 6px 18px rgba(16,24,40,0.06);
+    --glass: rgba(255,255,255,0.6);
+  }
+  [data-theme="dark"] {
+    --bg: #0f1724;
+    --card: #111827;
+    --muted: #9ca3af;
+    --text: #e6eef6;
+    --accent: #22c55e;
+    --accent-2: #10b981;
+    --danger: #ff6b6b;
+    --border: #1f2937;
+    --shadow: 0 6px 20px rgba(2,6,23,0.6);
+    --glass: rgba(11,15,20,0.6);
+  }
+
+  body {
+    background: linear-gradient(180deg,var(--bg), rgba(0,0,0,0.02));
+    color: var(--text);
+    font-family: InterVar, Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    max-width: 1100px;
+    margin: 28px auto;
+    padding: 22px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.45;
+  }
+
+  /* ---------- Header ---------- */
+  header { display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px; }
+  h1 { font-size:1.25rem; font-weight:700; margin:0; }
+  .sub { color:var(--muted); font-size:0.9rem; }
+
+  /* ---------- Controls ---------- */
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px; box-shadow:var(--shadow); }
+  .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  .col { display:flex; flex-direction:column; gap:8px; }
+
+  textarea, input[type="text"], select {
+    background:transparent; border:1px solid var(--border); padding:10px 12px; border-radius:8px; color:var(--text);
+    min-width:0; outline:none;
+  }
+  textarea { min-height:96px; resize:vertical; width:100%; }
+  .small { font-size:0.88rem; color:var(--muted); }
+
+  .btn {
+    display:inline-flex; align-items:center; gap:8px;
+    background:linear-gradient(180deg,var(--accent), var(--accent-2)); color:white; border:none; padding:10px 14px; border-radius:10px;
+    cursor:pointer; font-weight:600;
+  }
+  .btn.secondary { background:transparent; border:1px solid var(--border); color:var(--text); }
+  .btn.ghost { background:transparent; border: 1px dashed var(--border); color:var(--muted); }
+
+  .upload-label { cursor:pointer; padding:10px 12px; border-radius:8px; border:1px solid var(--border); color:var(--muted); background:var(--glass); }
+
+  /* ---------- Drop zone ---------- */
+  #dropZone { margin-top:12px; padding:20px; text-align:center; border-radius:10px; border:2px dashed var(--border); background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent); cursor:pointer; }
+  #dropZone.drag { border-color:var(--accent); box-shadow: 0 8px 30px rgba(16,185,129,0.06); }
+
+  /* ---------- Options ---------- */
+  .controls-grid { display:flex; gap:12px; align-items:center; margin-top:12px; flex-wrap:wrap; }
+  select, input[type="range"] { padding:8px; }
+  #qualityValue { font-weight:700; color:var(--muted); min-width:48px; text-align:center; }
+
+  /* ---------- Preview list ---------- */
+  .preview-container { margin-top:18px; display:flex; flex-direction:column; gap:14px; }
+  .preview { display:flex; gap:14px; padding:12px; border-radius:10px; align-items:flex-start; border:1px solid var(--border); background:linear-gradient(180deg, transparent, rgba(0,0,0,0.01)); }
+  .preview .left { width:160px; flex-shrink:0; text-align:center; }
+  .preview .left img { width:150px; height:auto; border-radius:8px; display:block; margin:0 auto 8px; border:1px solid var(--border); }
+  .preview .right { flex:1; display:flex; flex-direction:column; gap:8px; }
+  .meta { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .tag { padding:6px 8px; border-radius:8px; background:var(--glass); color:var(--muted); font-size:0.85rem; border:1px solid var(--border); }
+  .status { font-weight:700; color:var(--muted); font-size:0.9rem; }
+
+  .download-link { color:var(--accent); text-decoration:none; font-weight:600; }
+  .error { color:var(--danger); font-weight:700; }
+  .muted { color:var(--muted); font-size:0.9rem; }
+
+  /* ---------- Footer ---------- */
+  footer { margin-top:18px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+  .actions { display:flex; gap:10px; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:900px) {
+    .preview { flex-direction:column; align-items:center; text-align:center; }
+    .preview .left { width:100%; }
+    .preview .right { width:100%; }
+    header { flex-direction:column; align-items:flex-start; gap:8px; }
+  }
 </style>
-  <style> /* Dark Theme CSS for Image Optimizer */ :root { --bg-color: #1e1e1e; --card-bg: #2d2d2d; --input-bg: #3a3a3a; --text-color: #e0e0e0; --text-highlight: #ffffff; --accent-green: #28a745; --accent-green-hover: #218838; --error-red: #ff4d4d; --border-color: #444444; --shadow: 0 4px 8px rgba(0, 0, 0, 0.3); } * { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: 'Inter', system-ui, -apple-system, Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); max-width: 1000px; margin: 20px auto; padding: 20px; line-height: 1.5; } h1 { color: var(--text-highlight); font-size: 2rem; margin-bottom: 20px; text-align: center; } #dropZone { border: 2px dashed var(--border-color); border-radius: 8px; padding: 20px; margin: 15px 0; text-align: center; background-color: var(--card-bg); transition: border-color 0.2s, background-color 0.2s; } #dropZone.dragover { border-color: var(--accent-green); background-color: #3a3a3a; } #dropZone p { font-size: 1rem; color: var(--text-color); } #upload, #format, #quality { margin: 15px 0; } #upload { display: none; /* Hide default file input */ } .upload-label { display: inline-block; padding: 12px 24px; background-color: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; transition: background-color 0.2s, transform 0.1s; } .upload-label:hover { background-color: #444444; transform: translateY(-1px); } .upload-label:active { transform: translateY(0); } label { font-size: 1rem; color: var(--text-color); margin-right: 10px; } select { padding: 10px; background-color: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 6px; font-size: 1rem; cursor: pointer; transition: border-color 0.2s; } select:hover, select:focus { border-color: var(--accent-green); outline: none; } #quality { width: 200px; height: 8px; background: var(--input-bg); border-radius: 4px; cursor: pointer; appearance: none; -webkit-appearance: none; } #quality::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; background: var(--accent-green); border-radius: 50%; cursor: pointer; transition: background 0.2s; } #quality::-webkit-slider-thumb:hover { background: var(--accent-green-hover); } #quality::-moz-range-thumb { width: 16px; height: 16px; background: var(--accent-green); border-radius: 50%; cursor: pointer; border: none; } #quality::-moz-range-thumb:hover { background: var(--accent-green-hover); } #qualityValue { font-size: 1rem; color: var(--text-highlight); } button { padding: 12px 24px; background-color: var(--accent-green); color: var(--text-highlight); border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; transition: background-color 0.2s, transform 0.1s; } button:hover { background-color: var(--accent-green-hover); transform: translateY(-1px); } button:active { transform: translateY(0); } .download-link { color: var(--accent-green); text-decoration: none; font-size: 0.9rem; margin-left: 10px; transition: color 0.2s; } .download-link:hover { color: var(--accent-green-hover); text-decoration: underline; } #error { color: var(--error-red); display: none; margin: 15px 0; font-size: 1rem; text-align: center; } .preview-container { display: flex; flex-direction: column; margin: 20px 0; } .preview { margin-bottom: 20px; background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; box-shadow: var(--shadow); transition: transform 0.2s; } .preview:hover { transform: translateY(-2px); } .preview h3 { color: var(--text-highlight); font-size: 1.25rem; margin-bottom: 15px; } .image-pair { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; } .image-pair div { width: 48%; text-align: center; } .image-pair h4 { color: var(--text-color); font-size: 1.1rem; margin-bottom: 10px; } img { max-width: 100%; height: auto; border: 1px solid var(--border-color); border-radius: 4px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); } .image-info { margin: 10px 0; font-size: 0.9rem; color: var(--text-color); display: flex; align-items: center; justify-content: center; } #downloadAll { margin-top: 20px; } /* Responsive Design */ @media (max-width: 768px) { body { padding: 15px; } h1 { font-size: 1.5rem; } .image-pair { flex-direction: column; align-items: center; } .image-pair div { width: 100%; margin-bottom: 20px; } .preview { padding: 15px; } #dropZone { padding: 15px; } button, .upload-label, select { padding: 10px 20px; font-size: 0.9rem; } } @media (max-width: 480px) { #quality { width: 150px; } label, #qualityValue { font-size: 0.9rem; } .preview h3 { font-size: 1.1rem; } .image-info { font-size: 0.85rem; flex-direction: column; gap: 5px; } .download-link { margin-left: 0; } } </style>
 </head>
 <body>
+  <div id="root" class="page" data-theme="dark">
+    <header>
+      <div>
+        <h1>Multiple Image Optimizer</h1>
+        <div class="sub">Upload images, paste bulk URLs, convert/compress and download individually or as ZIP</div>
+      </div>
 
-<h1>Multiple Image Optimizer — Upload + Bulk URLs</h1>
+      <div class="row" style="align-items:center;">
+        <div class="small" id="themeLabel">Theme</div>
+        <button id="themeToggle" class="btn secondary">Toggle Theme</button>
+      </div>
+    </header>
 
-<!-- URL controls -->
-<div style="margin-bottom:12px">
-  <label class="small">Paste image URLs (one per line):</label>
-  <textarea id="urlArea" placeholder="https://example.com/a.jpg&#10;https://example.com/b.png"></textarea>
-  <div class="flex-row" style="margin-top:8px">
-    <button id="addUrlsBtn">Add URLs</button>
-    <label class="upload-label" title="Upload a .txt or .csv file with URLs (one per line or comma separated)">
-      Upload URL list (.txt / .csv)
-      <input type="file" id="urlFile" accept=".txt,.csv" class="file-input-hidden" />
-    </label>
-    <span class="small">OR</span>
-    <label class="upload-label" for="upload">Choose Local Images</label>
-    <input type="file" id="upload" accept="image/*" multiple class="file-input-hidden" />
-  </div>
-  <div class="small" style="margin-top:6px;color:#bfbfbf">Tip: URLs may fail to fetch if the source blocks cross-origin requests (CORS).</div>
-</div>
+    <!-- Main controls -->
+    <section class="card">
+      <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
+        <div style="flex:1;min-width:300px;">
+          <label class="small">Paste image URLs (one per line)</label>
+          <textarea id="urlArea" placeholder="https://example.com/a.jpg&#10;https://example.com/b.png"></textarea>
 
-<!-- Drop zone -->
-<div id="dropZone">
-  <p>Drag & Drop Images Here — or click to open file picker</p>
-</div>
+          <div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap;">
+            <button id="addUrlsBtn" class="btn">Add URLs</button>
 
-<!-- format & quality -->
-<div class="controls">
-  <div class="flex-row">
-    <label for="format" class="small">Output Format:</label>
-    <select id="format">
-      <option value="image/webp" selected>WebP</option>
-      <option value="image/jpeg">JPEG</option>
-      <option value="image/png">PNG</option>
-    </select>
-  </div>
+            <label class="upload-label" title="Upload .txt or .csv with URLs">
+              Upload URL list (.txt / .csv)
+              <input id="urlFile" type="file" accept=".txt,.csv" style="display:none">
+            </label>
 
-  <div class="flex-row">
-    <label for="quality" class="small">Quality:</label>
-    <input type="range" id="quality" min="10" max="100" step="5" value="80" />
-    <span id="qualityValue">80%</span>
-  </div>
+            <label class="upload-label" title="Choose local image files">
+              Choose Local Images
+              <input id="upload" type="file" accept="image/*" multiple style="display:none">
+            </label>
 
-  <div>
-    <button id="optimizeBtn">Optimize Images</button>
-  </div>
-</div>
-
-<div id="error"></div>
-
-<div class="preview-container" id="previewContainer"></div>
-
-<button id="downloadAll">Download All as ZIP</button>
-
-<!-- libs -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-
-<script>
-/* -------------------------
-   State
-   ------------------------- */
-const uploadInput = document.getElementById('upload');
-const urlFileInput = document.getElementById('urlFile');
-const dropZone = document.getElementById('dropZone');
-const urlArea = document.getElementById('urlArea');
-const addUrlsBtn = document.getElementById('addUrlsBtn');
-const previewContainer = document.getElementById('previewContainer');
-const optimizeBtn = document.getElementById('optimizeBtn');
-const downloadAllBtn = document.getElementById('downloadAll');
-const errorEl = document.getElementById('error');
-const qualityInput = document.getElementById('quality');
-const qualityValue = document.getElementById('qualityValue');
-const formatSelect = document.getElementById('format');
-
-let allFiles = [];        // array of File objects (local + fetched)
-let optimizedBlobs = [];  // {blob, name}
-qualityValue.textContent = qualityInput.value + '%';
-
-/* -------------------------
-   Helpers
-   ------------------------- */
-function showError(text){
-  errorEl.textContent = text;
-  errorEl.style.display = 'block';
-}
-function clearError(){
-  errorEl.textContent = '';
-  errorEl.style.display = 'none';
-}
-function fileExtFromMime(mime){
-  return mime.split('/')[1] || 'bin';
-}
-function uniqueName(base, ext){
-  const t = Date.now().toString(36);
-  return `${base.replace(/\.[^/.]+$/, '') || 'image'}-${t}.${ext}`;
-}
-
-/* -------------------------
-   Drag & Drop (fixed)
-   ------------------------- */
-dropZone.addEventListener('dragover', e => {
-  e.preventDefault();
-  dropZone.classList.add('dragover');
-});
-dropZone.addEventListener('dragleave', e => {
-  dropZone.classList.remove('dragover');
-});
-dropZone.addEventListener('drop', e => {
-  e.preventDefault();
-  dropZone.classList.remove('dragover');
-  const files = Array.from(e.dataTransfer.files || []);
-  if(files.length) addLocalFiles(files);
-});
-dropZone.addEventListener('click', () => {
-  uploadInput.click();
-});
-
-/* -------------------------
-   Local file input
-   ------------------------- */
-uploadInput.addEventListener('change', () => {
-  const files = Array.from(uploadInput.files || []);
-  if(files.length) addLocalFiles(files);
-});
-
-/* -------------------------
-   URL textarea: add URLs (one per line)
-   ------------------------- */
-addUrlsBtn.addEventListener('click', async () => {
-  const raw = urlArea.value.trim();
-  if(!raw) return showError('Paste one or more image URLs (one per line).');
-  const candidates = parseUrlText(raw);
-  await fetchAndAddUrls(candidates);
-  urlArea.value = '';
-});
-
-/* -------------------------
-   URL file (.txt/.csv)
-   ------------------------- */
-urlFileInput.addEventListener('change', async () => {
-  const f = urlFileInput.files[0];
-  if(!f) return;
-  const text = await f.text();
-  const urls = parseUrlText(text);
-  await fetchAndAddUrls(urls);
-  urlFileInput.value = '';
-});
-
-/* -------------------------
-   Parse URL text -> array
-   Accepts newline-separated and comma-separated
-   ------------------------- */
-function parseUrlText(text){
-  // split by line breaks, commas; trim; remove empties
-  const arr = text.split(/\r?\n|,/).map(s => s.trim()).filter(Boolean);
-  // dedupe
-  return Array.from(new Set(arr));
-}
-
-/* -------------------------
-   Fetch multiple URLs (bulk)
-   Converts each fetched Blob to a File and adds to allFiles
-   ------------------------- */
-async function fetchAndAddUrls(urls){
-  clearError();
-  if(!urls.length) return;
-  // Show quick status preview entries (so user sees progress)
-  urls.forEach(u => addStatusPreview(u, 'pending'));
-
-  const fetchPromises = urls.map(async (url, idx) => {
-    try {
-      // Attempt to fetch image (may fail due to CORS)
-      const resp = await fetch(url, { mode: 'cors' });
-      if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const blob = await resp.blob();
-      if(!blob.type.startsWith('image/')) throw new Error('Not an image');
-      const ext = fileExtFromMime(blob.type);
-      const file = new File([blob], uniqueName('url-image', ext), { type: blob.type });
-      allFiles.push(file);
-      updateStatusPreview(url, 'done');
-      return { success: true };
-    } catch (err) {
-      // Update status preview to show failure
-      updateStatusPreview(url, 'error', String(err));
-      return { success: false, url, error: String(err) };
-    }
-  });
-
-  const results = await Promise.all(fetchPromises);
-  // remove pending status placeholders and render full previews
-  renderPreviews();
-  const failed = results.filter(r => !r.success);
-  if(failed.length) {
-    showError(`${failed.length} URL(s) failed to fetch. Check console or status badges for details.`);
-    console.warn('URL fetch failures:', failed);
-  } else {
-    clearError();
-  }
-}
-
-/* -------------------------
-   Status preview helpers for URL fetching
-   ------------------------- */
-function addStatusPreview(url, status){
-  const div = document.createElement('div');
-  div.className = 'preview';
-  div.dataset.url = url;
-  div.innerHTML = `
-    <h3>${escapeHtml(url)}</h3>
-    <div class="image-pair">
-      <div><h4>Original (from URL)</h4><div class="image-info">Fetching…</div></div>
-      <div><h4>Optimized</h4><div class="image-info">—</div></div>
-    </div>
-  `;
-  previewContainer.prepend(div);
-}
-function updateStatusPreview(url, status, msg = ''){
-  const node = previewContainer.querySelector(`.preview[data-url="${cssEscape(url)}"]`);
-  if(!node) return;
-  const info = node.querySelector('.image-info');
-  if(status === 'done') info.textContent = 'Fetched ✓';
-  else if(status === 'error') info.textContent = `Failed: ${msg}`;
-  else info.textContent = msg || status;
-}
-
-/* -------------------------
-   Add local files to state
-   ------------------------- */
-function addLocalFiles(files){
-  clearError();
-  const images = files.filter(f => f.type && f.type.startsWith('image/'));
-  if(images.length === 0) return showError('No image files found in selection.');
-  images.forEach(f => allFiles.push(f));
-  renderPreviews();
-}
-
-/* -------------------------
-   Render previews for allFiles
-   Each file gets Original + Optimized placeholders
-   ------------------------- */
-function renderPreviews(){
-  previewContainer.innerHTML = '';
-  allFiles.forEach((file, idx) => {
-    const reader = new FileReader();
-    const index = idx;
-    reader.onload = () => {
-      const div = document.createElement('div');
-      div.className = 'preview';
-      div.dataset.index = index;
-      div.innerHTML = `
-        <h3>Image ${index + 1}: ${escapeHtml(file.name)}</h3>
-        <div class="image-pair">
-          <div>
-            <h4>Original</h4>
-            <img src="${reader.result}" alt="original-${index}" />
-            <p class="image-info">Size: ${(file.size/1024).toFixed(2)} KB • ${file.type || 'unknown'}</p>
+            <div class="small muted">Tip: some URLs may fail to fetch due to remote CORS policies (see status)</div>
           </div>
-          <div>
-            <h4>Optimized</h4>
-            <img id="optimizedPreview${index}" alt="optimized-${index}" />
-            <p id="optimizedSize${index}" class="image-info"></p>
-            <a id="downloadLink${index}" class="download-link" style="display:none">Download</a>
+
+        </div>
+
+        <div style="width:360px;min-width:260px;">
+          <div class="col">
+            <div class="small">Drag & drop images below (or click the area)</div>
+            <div id="dropZone">Drag & Drop Images Here — or click to open file picker</div>
+
+            <div class="controls-grid">
+              <div class="row" style="align-items:center;">
+                <label class="small" for="format">Output format</label>
+                <select id="format">
+                  <option value="image/webp">WebP (recommended)</option>
+                  <option value="image/jpeg">JPEG</option>
+                  <option value="image/png">PNG</option>
+                </select>
+              </div>
+
+              <div class="row" style="align-items:center;">
+                <label class="small" for="quality">Quality</label>
+                <input id="quality" type="range" min="10" max="100" step="5" value="80">
+                <div id="qualityValue" class="small">80%</div>
+              </div>
+
+              <div style="margin-left:auto;">
+                <button id="optimizeBtn" class="btn">Optimize Images</button>
+              </div>
+            </div>
+
           </div>
         </div>
-      `;
-      previewContainer.appendChild(div);
-    };
-    reader.readAsDataURL(file);
-  });
-}
+      </div>
+    </section>
 
-/* -------------------------
-   Optimize button
-   ------------------------- */
-optimizeBtn.addEventListener('click', () => optimizeImages());
+    <!-- Error / Info -->
+    <div id="error" style="margin-top:12px;display:none;"></div>
 
-async function optimizeImages(){
-  clearError();
-  if(allFiles.length === 0) return showError('No images to optimize.');
+    <!-- Preview list -->
+    <div class="preview-container card" id="previewContainer" style="margin-top:18px;"></div>
 
-  optimizeBtn.disabled = true;
-  optimizeBtn.textContent = 'Optimizing…';
-  optimizedBlobs = [];
-  downloadAllBtn.style.display = 'none';
+    <!-- Footer actions -->
+    <footer>
+      <div class="small muted" id="infoText">No images loaded.</div>
+      <div class="actions">
+        <button id="downloadAllBtn" class="btn ghost" style="display:none">Download All as ZIP</button>
+        <button id="clearBtn" class="btn secondary">Clear All</button>
+      </div>
+    </footer>
+  </div>
 
-  const outputFormat = formatSelect.value;
-  const quality = (outputFormat === 'image/png') ? undefined : (qualityInput.value / 100);
+  <!-- Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
-  // Process files sequentially to avoid memory spikes (but small batches can be parallelized)
-  for(let i=0; i<allFiles.length; i++){
-    const file = allFiles[i];
-    try {
-      const result = await optimizeSingleFile(file, outputFormat, quality);
-      optimizedBlobs.push({ blob: result.blob, name: result.name });
-      // update UI
-      const imgEl = document.getElementById(`optimizedPreview${i}`);
-      const sizeEl = document.getElementById(`optimizedSize${i}`);
-      const linkEl = document.getElementById(`downloadLink${i}`);
-      if(imgEl) imgEl.src = URL.createObjectURL(result.blob);
-      if(sizeEl) sizeEl.textContent = `${(result.blob.size/1024).toFixed(2)} KB • ${outputFormat.split('/')[1].toUpperCase()}`;
-      if(linkEl){
-        linkEl.href = URL.createObjectURL(result.blob);
-        linkEl.download = result.name;
-        linkEl.style.display = 'inline';
-        linkEl.textContent = 'Download';
-      }
-    } catch(err){
-      console.warn('Optimize error for', file.name, err);
-      // show error in preview if possible
-      const sizeEl = document.getElementById(`optimizedSize${i}`);
-      if(sizeEl) sizeEl.textContent = 'Optimization failed';
-      showError('Some images failed to optimize. See console for details.');
+  <script>
+  (function(){
+    // ---------- Elements ----------
+    const root = document.getElementById('root');
+    const themeToggle = document.getElementById('themeToggle');
+    const themeLabel = document.getElementById('themeLabel');
+    const urlArea = document.getElementById('urlArea');
+    const addUrlsBtn = document.getElementById('addUrlsBtn');
+    const urlFile = document.getElementById('urlFile');
+    const uploadInput = document.getElementById('upload');
+    const dropZone = document.getElementById('dropZone');
+    const previewContainer = document.getElementById('previewContainer');
+    const optimizeBtn = document.getElementById('optimizeBtn');
+    const formatSelect = document.getElementById('format');
+    const qualityInput = document.getElementById('quality');
+    const qualityValue = document.getElementById('qualityValue');
+    const downloadAllBtn = document.getElementById('downloadAllBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const errorEl = document.getElementById('error');
+    const infoText = document.getElementById('infoText');
+
+    // ---------- State ----------
+    let allFiles = []; // array of File objects
+    let optimizedBlobs = []; // {blob, name}
+    let fetchingMap = new Map(); // url -> status
+
+    // ---------- Theme ----------
+    function applyTheme(theme){
+      root.setAttribute('data-theme', theme);
+      localStorage.setItem('imgopt_theme', theme);
+      themeToggle.textContent = theme === 'dark' ? 'Switch to Light' : 'Switch to Dark';
     }
-  }
+    const savedTheme = localStorage.getItem('imgopt_theme') || 'dark';
+    applyTheme(savedTheme);
 
-  if(optimizedBlobs.length > 0) downloadAllBtn.style.display = 'inline-block';
+    themeToggle.addEventListener('click', () => {
+      const current = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    });
 
-  optimizeBtn.disabled = false;
-  optimizeBtn.textContent = 'Optimize Images';
-}
+    // ---------- Quality label ----------
+    qualityValue.textContent = qualityInput.value + '%';
+    qualityInput.addEventListener('input', () => qualityValue.textContent = qualityInput.value + '%');
 
-/* -------------------------
-   Optimize a single File -> returns {blob, name}
-   Uses canvas.toDataURL with chosen format + quality
-   ------------------------- */
-function optimizeSingleFile(file, outputFormat, quality){
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    // Use object URL to load image
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        // convert
-        let dataUrl;
-        try {
-          dataUrl = canvas.toDataURL(outputFormat, quality);
-        } catch (e) {
-          // some browsers disallow quality with PNG mime, handle gracefully
-          try {
-            dataUrl = canvas.toDataURL(outputFormat);
-          } catch (err2){
-            URL.revokeObjectURL(url);
-            return reject(err2 || e);
-          }
-        }
-        const blob = dataURLToBlob(dataUrl);
-        const ext = outputFormat.split('/')[1];
-        const name = file.name ? file.name.split('.').slice(0,-1).join('.') + '.' + ext : uniqueName('image', ext);
-        URL.revokeObjectURL(url);
-        resolve({ blob, name });
-      } catch(err){
-        URL.revokeObjectURL(url);
-        reject(err);
+    // ---------- Utility helpers ----------
+    function showError(msg){
+      errorEl.style.display = 'block';
+      errorEl.innerHTML = '<div class="error">' + escapeHtml(msg) + '</div>';
+    }
+    function clearError(){ errorEl.style.display = 'none'; errorEl.innerHTML = ''; }
+
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    function fileExtFromMime(mime){ return (mime || 'image').split('/').pop().split('+')[0]; }
+    function uniqueName(base, ext='png'){ const t = Date.now().toString(36) + Math.floor(Math.random()*1000); return `${base.replace(/\.[^/.]+$/, '')}-${t}.${ext}`; }
+
+    function updateInfoText(){
+      if(allFiles.length === 0) {
+        infoText.textContent = 'No images loaded.';
+      } else {
+        infoText.textContent = `${allFiles.length} image(s) ready — optimize to produce ${formatSelect.value.split('/')[1].toUpperCase()} files.`;
       }
-    };
-    img.onerror = (ev) => {
-      URL.revokeObjectURL(url);
-      reject(new Error('Failed to load image for optimization (possibly CORS or corrupt file).'));
-    };
-    img.src = url;
-  });
-}
+    }
 
-/* -------------------------
-   Convert dataURL -> Blob
-   ------------------------- */
-function dataURLToBlob(dataURL){
-  const parts = dataURL.split(',');
-  const mime = parts[0].match(/:(.*?);/)[1];
-  const binary = atob(parts[1]);
-  const arr = new Uint8Array(binary.length);
-  for(let i=0;i<binary.length;i++) arr[i] = binary.charCodeAt(i);
-  return new Blob([arr], { type: mime });
-}
+    // ---------- Drag & Drop ----------
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+    dropZone.addEventListener('dragleave', e => { e.preventDefault(); dropZone.classList.remove('drag'); });
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('drag');
+      const items = Array.from(e.dataTransfer.files || []);
+      if(items.length) addLocalFiles(items);
+    });
+    dropZone.addEventListener('click', () => uploadInput.click());
 
-/* -------------------------
-   Download All as ZIP
-   ------------------------- */
-downloadAllBtn.addEventListener('click', async () => {
-  if(optimizedBlobs.length === 0) return;
-  downloadAllBtn.disabled = true;
-  downloadAllBtn.textContent = 'Preparing ZIP…';
-  const zip = new JSZip();
-  optimizedBlobs.forEach(item => zip.file(item.name, item.blob));
-  const content = await zip.generateAsync({ type: 'blob' });
-  saveAs(content, 'optimized_images.zip');
-  downloadAllBtn.disabled = false;
-  downloadAllBtn.textContent = 'Download All as ZIP';
-});
+    // ---------- Local file input ----------
+    uploadInput.addEventListener('change', () => {
+      const files = Array.from(uploadInput.files || []);
+      if(files.length) addLocalFiles(files);
+      uploadInput.value = '';
+    });
 
-/* -------------------------
-   Utilities
-   ------------------------- */
-function escapeHtml(s){ return s.replace(/[&<>"']/g, c=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function cssEscape(s) { return s.replace(/([^\w-])/g, m => '\\' + m); }
+    function addLocalFiles(files){
+      clearError();
+      const imgs = files.filter(f => f && f.type && f.type.startsWith('image/'));
+      if(imgs.length === 0) return showError('No image files found in selection.');
+      imgs.forEach(f => allFiles.push(f));
+      renderPreviews();
+      updateInfoText();
+    }
 
-/* -------------------------
-   Optional: expose clear-all (not shown) — but keep simple for now
-   ------------------------- */
-</script>
+    // ---------- URL textarea / file (bulk) ----------
+    addUrlsBtn.addEventListener('click', async () => {
+      const raw = urlArea.value.trim();
+      if(!raw) return showError('Paste one or more image URLs (one per line).');
+      const urls = parseUrlText(raw);
+      urlArea.value = '';
+      await fetchAndAddUrls(urls);
+    });
 
+    urlFile.addEventListener('change', async () => {
+      const f = urlFile.files[0];
+      if(!f) return;
+      const text = await f.text();
+      const urls = parseUrlText(text);
+      urlFile.value = '';
+      await fetchAndAddUrls(urls);
+    });
+
+    function parseUrlText(text){
+      const arr = text.split(/\r?\n|,/).map(s => s.trim()).filter(Boolean);
+      return Array.from(new Set(arr));
+    }
+
+    // ---------- Fetch & add URLs (with status placeholders & retry) ----------
+    async function fetchAndAddUrls(urls){
+      clearError();
+      if(!urls.length) return;
+      // Create placeholder entries
+      urls.forEach(url => {
+        fetchingMap.set(url, { status: 'pending', message: 'Waiting' });
+        addUrlStatusPreview(url);
+      });
+
+      // Fetch sequentially to avoid bursting
+      for(const url of urls){
+        try {
+          updateUrlStatus(url, 'fetching', 'Fetching...');
+          // Attempt to fetch as blob (regular CORS)
+          const resp = await fetch(url, { mode: 'cors' });
+          if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          const blob = await resp.blob();
+          if(!blob.type.startsWith('image/')) throw new Error('Fetched resource is not an image.');
+          const ext = fileExtFromMime(blob.type);
+          const file = new File([blob], uniqueName('url-image', ext), { type: blob.type });
+          allFiles.push(file);
+          updateUrlStatus(url, 'done', 'Fetched ✓');
+          renderPreviews(); // re-render to include newly added file
+          updateInfoText();
+        } catch (err) {
+          console.warn('Fetch URL failed', url, err);
+          updateUrlStatus(url, 'error', String(err));
+          // leave placeholder so user can retry
+        }
+      }
+
+      // Summarize
+      const failed = Array.from(fetchingMap.entries()).filter(([u,s]) => s.status === 'error');
+      if(failed.length) {
+        showError(`${failed.length} URL(s) failed to fetch. Click 'Retry' on each failed item or use a CORS proxy if needed.`);
+      } else {
+        clearError();
+      }
+    }
+
+    // ---------- Status preview helpers ----------
+    function addUrlStatusPreview(url){
+      // if preview for same url exists, skip
+      if(previewContainer.querySelector(`.preview[data-url="${cssEscape(url)}"]`)) return;
+      const div = document.createElement('div');
+      div.className = 'preview';
+      div.dataset.url = url;
+      div.innerHTML = `
+        <div class="left"><div style="width:150px;height:90px;border-radius:8px;background:var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);">URL</div></div>
+        <div class="right">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="max-width:70%;word-break:break-all;"><strong>${escapeHtml(url)}</strong></div>
+            <div class="meta">
+              <div class="tag status" id="status-${encodeURIComponent(url)}">Queued</div>
+              <button class="btn secondary" id="retry-${encodeURIComponent(url)}" style="display:none">Retry</button>
+            </div>
+          </div>
+          <div class="muted small" id="msg-${encodeURIComponent(url)}">Waiting to fetch…</div>
+        </div>
+      `;
+      // put URL placeholders at top
+      previewContainer.prepend(div);
+
+      // attach retry handler
+      setTimeout(() => {
+        const retryBtn = document.getElementById(`retry-${encodeURIComponent(url)}`);
+        if(retryBtn) retryBtn.addEventListener('click', async () => {
+          updateUrlStatus(url, 'fetching', 'Retrying...');
+          try {
+            const resp = await fetch(url, { mode: 'cors' });
+            if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const blob = await resp.blob();
+            if(!blob.type.startsWith('image/')) throw new Error('Not an image');
+            const ext = fileExtFromMime(blob.type);
+            const file = new File([blob], uniqueName('url-image', ext), { type: blob.type });
+            allFiles.push(file);
+            updateUrlStatus(url, 'done', 'Fetched ✓');
+            renderPreviews();
+            updateInfoText();
+            clearError();
+          } catch (err) {
+            updateUrlStatus(url, 'error', String(err));
+            showError('Retry failed. Many servers block cross-origin fetches. Use a CORS-enabled URL or a proxy.');
+          }
+        });
+      }, 50);
+    }
+
+    function updateUrlStatus(url, status, message){
+      fetchingMap.set(url, { status, message });
+      const esc = encodeURIComponent(url);
+      const statusEl = document.getElementById(`status-${esc}`);
+      const msgEl = document.getElementById(`msg-${esc}`);
+      const retryBtn = document.getElementById(`retry-${esc}`);
+      if(statusEl) {
+        statusEl.textContent = status === 'done' ? 'Done' : (status === 'fetching' ? 'Fetching' : (status === 'error' ? 'Error' : status));
+        statusEl.className = status === 'error' ? 'tag status error' : 'tag status';
+      }
+      if(msgEl) msgEl.textContent = message || '';
+      if(retryBtn) retryBtn.style.display = status === 'error' ? 'inline-flex' : 'none';
+    }
+
+    // css escape util
+    function cssEscape(s) { return s.replace(/([^\w-])/g, m => '\\' + m); }
+
+    // ---------- Render previews for allFiles ----------
+    function renderPreviews(){
+      // Clear all previews that are file-based (keep URL status previews)
+      // We'll remove all existing file previews and recreate to keep indexes stable
+      // Remove any preview that doesn't have data-url attr (those are file previews)
+      const urlNodes = Array.from(previewContainer.querySelectorAll('.preview[data-url]'));
+      previewContainer.innerHTML = '';
+      // re-add URL nodes
+      urlNodes.forEach(nd => previewContainer.appendChild(nd));
+
+      allFiles.forEach((file, idx) => {
+        // prevent duplicate render if already exists (based on file.name + size)
+        if(previewContainer.querySelector(`.preview[data-file="${escapeHtml(file.name)}_${file.size}"]`)) return;
+
+        const div = document.createElement('div');
+        div.className = 'preview';
+        div.dataset.file = `${escapeHtml(file.name)}_${file.size}`;
+
+        const objectUrl = URL.createObjectURL(file);
+
+        div.innerHTML = `
+          <div class="left">
+            <img src="${objectUrl}" alt="${escapeHtml(file.name)}" />
+            <div class="muted small">${(file.size/1024).toFixed(1)} KB</div>
+          </div>
+          <div class="right">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="max-width:70%;word-break:break-all;"><strong>${escapeHtml(file.name)}</strong></div>
+              <div class="meta">
+                <div class="tag">${escapeHtml(file.type || 'unknown')}</div>
+                <button class="btn secondary" data-remove="${escapeHtml(file.name)}_${file.size}">Remove</button>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:12px;align-items:center;margin-top:8px;">
+              <div style="flex:1;">
+                <div class="small muted">Optimized preview</div>
+                <img id="optimg-${idx}" alt="optimized-${idx}" style="max-width:220px;margin-top:8px;border-radius:6px;border:1px solid var(--border);" />
+                <div class="muted small" id="optsz-${idx}" style="margin-top:6px"></div>
+              </div>
+
+              <div style="min-width:120px;display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+                <a id="dl-${idx}" class="download-link" style="display:none" download>Download</a>
+                <div style="width:100%;display:flex;gap:6px;">
+                  <button class="btn" data-optimize-one="${idx}" style="flex:1">Optimize</button>
+                  <button class="btn secondary" data-preview="${idx}" style="flex:1">Open</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        previewContainer.appendChild(div);
+
+        // Attach remove handler
+        const removeBtn = div.querySelector(`[data-remove="${escapeHtml(file.name)}_${file.size}"]`);
+        if(removeBtn){
+          removeBtn.addEventListener('click', () => {
+            allFiles = allFiles.filter(f => !(f.name === file.name && f.size === file.size));
+            renderPreviews();
+            updateInfoText();
+          });
+        }
+
+        // Attach optimize single handler
+        const optOne = div.querySelector(`[data-optimize-one="${idx}"]`);
+        if(optOne){
+          optOne.addEventListener('click', async () => {
+            try {
+              optOne.disabled = true;
+              optOne.textContent = 'Optimizing…';
+              const outputFormat = formatSelect.value;
+              const quality = outputFormat === 'image/png' ? undefined : (qualityInput.value / 100);
+              const { blob, name } = await optimizeSingleFile(file, outputFormat, quality);
+              optimizedBlobs.push({ blob, name });
+              const optImg = document.getElementById(`optimg-${idx}`);
+              const optSz = document.getElementById(`optsz-${idx}`);
+              const dl = document.getElementById(`dl-${idx}`);
+              if(optImg) optImg.src = URL.createObjectURL(blob);
+              if(optSz) optSz.textContent = `${(blob.size/1024).toFixed(1)} KB • ${outputFormat.split('/')[1].toUpperCase()}`;
+              if(dl) { dl.href = URL.createObjectURL(blob); dl.download = name; dl.style.display = 'inline-block'; dl.textContent = 'Download'; }
+            } catch (err) {
+              console.warn('Single optimize error', err);
+              showError('Failed to optimize image. See console for details.');
+            } finally {
+              optOne.disabled = false;
+              optOne.textContent = 'Optimize';
+              if(optimizedBlobs.length > 0) downloadAllBtn.style.display = 'inline-block';
+            }
+          });
+        }
+
+        // Attach open preview (in new tab)
+        const previewBtn = div.querySelector(`[data-preview="${idx}"]`);
+        if(previewBtn){
+          previewBtn.addEventListener('click', () => {
+            window.open(objectUrl, '_blank');
+          });
+        }
+      });
+
+      // Clean up any object URLs? Not revoking here because previews still show them; revoke after removal if needed.
+    }
+
+    // ---------- Optimize all ----------
+    optimizeBtn.addEventListener('click', () => optimizeAll());
+    async function optimizeAll(){
+      clearError();
+      if(allFiles.length === 0) return showError('No images loaded to optimize.');
+      optimizeBtn.disabled = true;
+      optimizeBtn.textContent = 'Optimizing…';
+      optimizedBlobs = [];
+      downloadAllBtn.style.display = 'none';
+      const outputFormat = formatSelect.value;
+      const quality = outputFormat === 'image/png' ? undefined : (qualityInput.value / 100);
+
+      // process sequentially
+      for(let i=0;i<allFiles.length;i++){
+        const file = allFiles[i];
+        try {
+          const { blob, name } = await optimizeSingleFile(file, outputFormat, quality);
+          optimizedBlobs.push({ blob, name });
+
+          // update UI for that index (find position by file.name + size)
+          const node = previewContainer.querySelector(`.preview[data-file="${escapeHtml(file.name)}_${file.size}"]`);
+          if(node){
+            // find index in current render order
+            const index = Array.from(previewContainer.querySelectorAll('.preview')).indexOf(node);
+            const optImg = node.querySelector(`#optimg-${index}`);
+            const optSz = node.querySelector(`#optsz-${index}`);
+            const dl = node.querySelector(`#dl-${index}`);
+            if(optImg) optImg.src = URL.createObjectURL(blob);
+            if(optSz) optSz.textContent = `${(blob.size/1024).toFixed(1)} KB • ${outputFormat.split('/')[1].toUpperCase()}`;
+            if(dl) { dl.href = URL.createObjectURL(blob); dl.download = name; dl.style.display = 'inline-block'; dl.textContent = 'Download'; }
+          }
+        } catch (err) {
+          console.warn('Optimize error', allFiles[i].name, err);
+          // continue processing others
+        }
+      }
+
+      if(optimizedBlobs.length > 0) {
+        downloadAllBtn.style.display = 'inline-block';
+      } else {
+        showError('No images were successfully optimized.');
+      }
+
+      optimizeBtn.disabled = false;
+      optimizeBtn.textContent = 'Optimize Images';
+    }
+
+    // ---------- Optimize single file helper ----------
+    function optimizeSingleFile(file, outputFormat, quality){
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        // to allow loading local blob/object URL
+        const objectUrl = URL.createObjectURL(file);
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+
+            // prefer toBlob when available (async & memory-friendly)
+            if(canvas.toBlob){
+              try {
+                canvas.toBlob((blob) => {
+                  if(!blob) {
+                    // fallback to toDataURL
+                    try {
+                      const dataUrl = canvas.toDataURL(outputFormat);
+                      const fallback = dataURLToBlob(dataUrl);
+                      const name = uniqueName(file.name.split('.').slice(0, -1).join('.') || 'image', outputFormat.split('/')[1]);
+                      URL.revokeObjectURL(objectUrl);
+                      resolve({ blob: fallback, name });
+                    } catch (e) {
+                      URL.revokeObjectURL(objectUrl);
+                      reject(e);
+                    }
+                    return;
+                  }
+                  // If browser honored requested type in toBlob, good. Otherwise we can convert via canvas.toDataURL with mime param
+                  // Some browsers ignore quality for PNG, handle separately
+                  if(outputFormat && blob.type !== outputFormat){
+                    // try to make the desired type using toDataURL
+                    try {
+                      const dataUrl = canvas.toDataURL(outputFormat, quality);
+                      const converted = dataURLToBlob(dataUrl);
+                      const name = uniqueName(file.name.split('.').slice(0, -1).join('.') || 'image', outputFormat.split('/')[1]);
+                      URL.revokeObjectURL(objectUrl);
+                      resolve({ blob: converted, name });
+                    } catch (e){
+                      // fallback to blob returned
+                      const name = uniqueName(file.name.split('.').slice(0, -1).join('.') || 'image', fileExtFromMime(blob.type));
+                      URL.revokeObjectURL(objectUrl);
+                      resolve({ blob, name });
+                    }
+                  } else {
+                    // Good blob
+                    const ext = outputFormat ? outputFormat.split('/')[1] : fileExtFromMime(blob.type);
+                    const name = uniqueName(file.name.split('.').slice(0, -1).join('.') || 'image', ext);
+                    URL.revokeObjectURL(objectUrl);
+                    resolve({ blob, name });
+                  }
+                }, outputFormat, quality);
+              } catch (err) {
+                // fallback to toDataURL path
+                try {
+                  const dataUrl = canvas.toDataURL(outputFormat, quality);
+                  const blob = dataURLToBlob(dataUrl);
+                  const name = uniqueName(file.name.split('.').slice(0, -1).join('.') || 'image', outputFormat.split('/')[1]);
+                  URL.revokeObjectURL(objectUrl);
+                  resolve({ blob, name });
+                } catch(e){
+                  URL.revokeObjectURL(objectUrl);
+                  reject(e);
+                }
+              }
+            } else {
+              // very old browsers
+              try {
+                const dataUrl = canvas.toDataURL(outputFormat, quality);
+                const blob = dataURLToBlob(dataUrl);
+                const name = uniqueName(file.name.split('.').slice(0, -1).join('.') || 'image', outputFormat.split('/')[1]);
+                URL.revokeObjectURL(objectUrl);
+                resolve({ blob, name });
+              } catch(e){
+                URL.revokeObjectURL(objectUrl);
+                reject(e);
+              }
+            }
+          } catch (err) {
+            URL.revokeObjectURL(objectUrl);
+            reject(err);
+          }
+        };
+        img.onerror = (ev) => {
+          URL.revokeObjectURL(objectUrl);
+          reject(new Error('Failed to load image into canvas (CORS or corrupt file).'));
+        };
+
+        // Important: set crossOrigin if we want to attempt CORS-enabled remote images.
+        // For local files or blob URLs, this is fine. For remote images fetched as blobs, crossorigin isn't needed.
+        img.src = objectUrl;
+      });
+    }
+
+    // ---------- dataURL -> Blob ----------
+    function dataURLToBlob(dataURL){
+      const parts = dataURL.split(',');
+      const mime = parts[0].match(/:(.*?);/)[1];
+      const binary = atob(parts[1]);
+      const array = new Uint8Array(binary.length);
+      for(let i=0;i<binary.length;i++) array[i] = binary.charCodeAt(i);
+      return new Blob([array], { type: mime });
+    }
+
+    // ---------- Download all as ZIP ----------
+    downloadAllBtn.addEventListener('click', async () => {
+      if(optimizedBlobs.length === 0) return showError('No optimized images available to download. Optimize images first.');
+      downloadAllBtn.disabled = true;
+      downloadAllBtn.textContent = 'Preparing ZIP…';
+      try {
+        const zip = new JSZip();
+        optimizedBlobs.forEach(item => zip.file(item.name, item.blob));
+        const content = await zip.generateAsync({ type: 'blob' });
+        saveAs(content, 'optimized_images.zip');
+      } catch (err) {
+        console.error(err);
+        showError('Failed to create ZIP file.');
+      } finally {
+        downloadAllBtn.disabled = false;
+        downloadAllBtn.textContent = 'Download All as ZIP';
+      }
+    });
+
+    // ---------- Clear ----------
+    clearBtn.addEventListener('click', () => {
+      if(!confirm('Clear all loaded images and previews?')) return;
+      allFiles = [];
+      optimizedBlobs = [];
+      fetchingMap.clear();
+      previewContainer.innerHTML = '';
+      clearError();
+      downloadAllBtn.style.display = 'none';
+      updateInfoText();
+    });
+
+    // ---------- Helper: convert fetched blobs to Files (not strictly necessary but keeps uniform) ----------
+    function blobToFile(blob, filename){
+      try { return new File([blob], filename, { type: blob.type }); }
+      catch(e){
+        // older browsers
+        blob.name = filename;
+        blob.lastModified = Date.now();
+        return blob;
+      }
+    }
+
+    // ---------- CSS-safe encode ----------
+    function encodeForId(s){
+      return encodeURIComponent(s).replace(/%/g,'_');
+    }
+
+    // ---------- Small helpers ----------
+    function ensureDownloadAllBtnVisible(){ if(optimizedBlobs.length>0) downloadAllBtn.style.display='inline-block'; else downloadAllBtn.style.display='none'; }
+
+    // ---------- bootstrap: expose fetch via console if needed ----------
+    window.__imgopt = { allFiles, optimizedBlobs };
+
+    // ---------- initial state ----------
+    updateInfoText();
+
+    // ---------- Notes in console ----------
+    console.info('Multiple Image Optimizer loaded. Note: remote URL fetches may fail due to CORS; use CORS-enabled URLs or proxy if needed.');
+  })();
+  </script>
 </body>
 </html>
