@@ -1,250 +1,447 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Multiple Image Optimizer</title>
-<style> /* Dark Theme CSS for Image Optimizer */ :root { --bg-color: #1e1e1e; --card-bg: #2d2d2d; --input-bg: #3a3a3a; --text-color: #e0e0e0; --text-highlight: #ffffff; --accent-green: #28a745; --accent-green-hover: #218838; --error-red: #ff4d4d; --border-color: #444444; --shadow: 0 4px 8px rgba(0, 0, 0, 0.3); } * { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: 'Inter', system-ui, -apple-system, Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); max-width: 1000px; margin: 20px auto; padding: 20px; line-height: 1.5; } h1 { color: var(--text-highlight); font-size: 2rem; margin-bottom: 20px; text-align: center; } #dropZone { border: 2px dashed var(--border-color); border-radius: 8px; padding: 20px; margin: 15px 0; text-align: center; background-color: var(--card-bg); transition: border-color 0.2s, background-color 0.2s; } #dropZone.dragover { border-color: var(--accent-green); background-color: #3a3a3a; } #dropZone p { font-size: 1rem; color: var(--text-color); } #upload, #format, #quality { margin: 15px 0; } #upload { display: none; /* Hide default file input */ } .upload-label { display: inline-block; padding: 12px 24px; background-color: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; transition: background-color 0.2s, transform 0.1s; } .upload-label:hover { background-color: #444444; transform: translateY(-1px); } .upload-label:active { transform: translateY(0); } label { font-size: 1rem; color: var(--text-color); margin-right: 10px; } select { padding: 10px; background-color: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 6px; font-size: 1rem; cursor: pointer; transition: border-color 0.2s; } select:hover, select:focus { border-color: var(--accent-green); outline: none; } #quality { width: 200px; height: 8px; background: var(--input-bg); border-radius: 4px; cursor: pointer; appearance: none; -webkit-appearance: none; } #quality::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; background: var(--accent-green); border-radius: 50%; cursor: pointer; transition: background 0.2s; } #quality::-webkit-slider-thumb:hover { background: var(--accent-green-hover); } #quality::-moz-range-thumb { width: 16px; height: 16px; background: var(--accent-green); border-radius: 50%; cursor: pointer; border: none; } #quality::-moz-range-thumb:hover { background: var(--accent-green-hover); } #qualityValue { font-size: 1rem; color: var(--text-highlight); } button { padding: 12px 24px; background-color: var(--accent-green); color: var(--text-highlight); border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; transition: background-color 0.2s, transform 0.1s; } button:hover { background-color: var(--accent-green-hover); transform: translateY(-1px); } button:active { transform: translateY(0); } .download-link { color: var(--accent-green); text-decoration: none; font-size: 0.9rem; margin-left: 10px; transition: color 0.2s; } .download-link:hover { color: var(--accent-green-hover); text-decoration: underline; } #error { color: var(--error-red); display: none; margin: 15px 0; font-size: 1rem; text-align: center; } .preview-container { display: flex; flex-direction: column; margin: 20px 0; } .preview { margin-bottom: 20px; background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; box-shadow: var(--shadow); transition: transform 0.2s; } .preview:hover { transform: translateY(-2px); } .preview h3 { color: var(--text-highlight); font-size: 1.25rem; margin-bottom: 15px; } .image-pair { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; } .image-pair div { width: 48%; text-align: center; } .image-pair h4 { color: var(--text-color); font-size: 1.1rem; margin-bottom: 10px; } img { max-width: 100%; height: auto; border: 1px solid var(--border-color); border-radius: 4px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); } .image-info { margin: 10px 0; font-size: 0.9rem; color: var(--text-color); display: flex; align-items: center; justify-content: center; } #downloadAll { margin-top: 20px; } /* Responsive Design */ @media (max-width: 768px) { body { padding: 15px; } h1 { font-size: 1.5rem; } .image-pair { flex-direction: column; align-items: center; } .image-pair div { width: 100%; margin-bottom: 20px; } .preview { padding: 15px; } #dropZone { padding: 15px; } button, .upload-label, select { padding: 10px 20px; font-size: 0.9rem; } } @media (max-width: 480px) { #quality { width: 150px; } label, #qualityValue { font-size: 0.9rem; } .preview h3 { font-size: 1.1rem; } .image-info { font-size: 0.85rem; flex-direction: column; gap: 5px; } .download-link { margin-left: 0; } } </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Multiple Image Optimizer — Bulk URLs + Upload</title>
+<style>
+:root{
+  --bg:#1e1e1e;--card:#2d2d2d;--input:#3a3a3a;--text:#e0e0e0;--highlight:#fff;--green:#28a745;--greenh:#218838;--err:#ff4d4d;--border:#444;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,system-ui,Arial,sans-serif;background:var(--bg);color:var(--text);max-width:1100px;margin:20px auto;padding:20px}
+h1{text-align:center;color:var(--highlight);margin-bottom:18px}
+#dropZone{border:2px dashed var(--border);border-radius:8px;padding:20px;margin:10px 0;background:var(--card);text-align:center;cursor:pointer}
+#dropZone.dragover{border-color:var(--green);background:#3a3a3a}
+.upload-label{display:inline-block;padding:10px 18px;background:var(--input);color:var(--text);border-radius:6px;border:1px solid var(--border);cursor:pointer;margin-top:8px}
+.controls{display:flex;gap:12px;align-items:center;margin:12px 0;flex-wrap:wrap}
+select,input[type="range"]{background:var(--input);color:var(--text);border:1px solid var(--border);padding:8px;border-radius:6px}
+#quality{width:220px}
+button{padding:10px 16px;border-radius:6px;border:none;background:var(--green);color:var(--highlight);cursor:pointer}
+button:hover{background:var(--greenh)}
+.preview-container{display:flex;flex-direction:column;gap:16px;margin-top:18px}
+.preview{background:var(--card);border:1px solid var(--border);padding:14px;border-radius:8px;box-shadow:0 4px 8px rgba(0,0,0,0.25)}
+.image-pair{display:flex;gap:16px;flex-wrap:wrap}
+.image-pair div{flex:1;min-width:220px;text-align:center}
+img{max-width:100%;height:auto;border-radius:6px;border:1px solid var(--border)}
+.image-info{font-size:0.9rem;color:var(--text);margin-top:8px}
+.download-link{color:var(--green);text-decoration:none;margin-left:8px}
+#error{color:var(--err);display:none;margin-top:12px;text-align:center}
+#urlArea{width:100%;height:100px;background:var(--input);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px;resize:vertical}
+.small{font-size:0.9rem;color:var(--text)}
+.flex-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#downloadAll{display:none;margin-top:12px}
+.file-input-hidden{display:none}
+@media(max-width:700px){.image-pair{flex-direction:column}}
+</style>
+  <style> /* Dark Theme CSS for Image Optimizer */ :root { --bg-color: #1e1e1e; --card-bg: #2d2d2d; --input-bg: #3a3a3a; --text-color: #e0e0e0; --text-highlight: #ffffff; --accent-green: #28a745; --accent-green-hover: #218838; --error-red: #ff4d4d; --border-color: #444444; --shadow: 0 4px 8px rgba(0, 0, 0, 0.3); } * { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: 'Inter', system-ui, -apple-system, Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); max-width: 1000px; margin: 20px auto; padding: 20px; line-height: 1.5; } h1 { color: var(--text-highlight); font-size: 2rem; margin-bottom: 20px; text-align: center; } #dropZone { border: 2px dashed var(--border-color); border-radius: 8px; padding: 20px; margin: 15px 0; text-align: center; background-color: var(--card-bg); transition: border-color 0.2s, background-color 0.2s; } #dropZone.dragover { border-color: var(--accent-green); background-color: #3a3a3a; } #dropZone p { font-size: 1rem; color: var(--text-color); } #upload, #format, #quality { margin: 15px 0; } #upload { display: none; /* Hide default file input */ } .upload-label { display: inline-block; padding: 12px 24px; background-color: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; transition: background-color 0.2s, transform 0.1s; } .upload-label:hover { background-color: #444444; transform: translateY(-1px); } .upload-label:active { transform: translateY(0); } label { font-size: 1rem; color: var(--text-color); margin-right: 10px; } select { padding: 10px; background-color: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 6px; font-size: 1rem; cursor: pointer; transition: border-color 0.2s; } select:hover, select:focus { border-color: var(--accent-green); outline: none; } #quality { width: 200px; height: 8px; background: var(--input-bg); border-radius: 4px; cursor: pointer; appearance: none; -webkit-appearance: none; } #quality::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; background: var(--accent-green); border-radius: 50%; cursor: pointer; transition: background 0.2s; } #quality::-webkit-slider-thumb:hover { background: var(--accent-green-hover); } #quality::-moz-range-thumb { width: 16px; height: 16px; background: var(--accent-green); border-radius: 50%; cursor: pointer; border: none; } #quality::-moz-range-thumb:hover { background: var(--accent-green-hover); } #qualityValue { font-size: 1rem; color: var(--text-highlight); } button { padding: 12px 24px; background-color: var(--accent-green); color: var(--text-highlight); border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; transition: background-color 0.2s, transform 0.1s; } button:hover { background-color: var(--accent-green-hover); transform: translateY(-1px); } button:active { transform: translateY(0); } .download-link { color: var(--accent-green); text-decoration: none; font-size: 0.9rem; margin-left: 10px; transition: color 0.2s; } .download-link:hover { color: var(--accent-green-hover); text-decoration: underline; } #error { color: var(--error-red); display: none; margin: 15px 0; font-size: 1rem; text-align: center; } .preview-container { display: flex; flex-direction: column; margin: 20px 0; } .preview { margin-bottom: 20px; background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; box-shadow: var(--shadow); transition: transform 0.2s; } .preview:hover { transform: translateY(-2px); } .preview h3 { color: var(--text-highlight); font-size: 1.25rem; margin-bottom: 15px; } .image-pair { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; } .image-pair div { width: 48%; text-align: center; } .image-pair h4 { color: var(--text-color); font-size: 1.1rem; margin-bottom: 10px; } img { max-width: 100%; height: auto; border: 1px solid var(--border-color); border-radius: 4px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); } .image-info { margin: 10px 0; font-size: 0.9rem; color: var(--text-color); display: flex; align-items: center; justify-content: center; } #downloadAll { margin-top: 20px; } /* Responsive Design */ @media (max-width: 768px) { body { padding: 15px; } h1 { font-size: 1.5rem; } .image-pair { flex-direction: column; align-items: center; } .image-pair div { width: 100%; margin-bottom: 20px; } .preview { padding: 15px; } #dropZone { padding: 15px; } button, .upload-label, select { padding: 10px 20px; font-size: 0.9rem; } } @media (max-width: 480px) { #quality { width: 150px; } label, #qualityValue { font-size: 0.9rem; } .preview h3 { font-size: 1.1rem; } .image-info { font-size: 0.85rem; flex-direction: column; gap: 5px; } .download-link { margin-left: 0; } } </style>
 </head>
 <body>
 
-<h1>Multiple Image Optimizer</h1>
+<h1>Multiple Image Optimizer — Upload + Bulk URLs</h1>
 
-<!-- ⭐ NEW: Add Image by URL -->
-<div style="margin-bottom:20px;">
-  <label style="font-size:1rem;">Add Image from URL:</label>
-  <input type="text" id="imageUrl" placeholder="https://example.com/image.jpg" 
-         style="width:60%;padding:10px;background:#3a3a3a;color:#fff;border:1px solid #444;border-radius:6px;">
-  <button onclick="addImageByURL()">Add</button>
+<!-- URL controls -->
+<div style="margin-bottom:12px">
+  <label class="small">Paste image URLs (one per line):</label>
+  <textarea id="urlArea" placeholder="https://example.com/a.jpg&#10;https://example.com/b.png"></textarea>
+  <div class="flex-row" style="margin-top:8px">
+    <button id="addUrlsBtn">Add URLs</button>
+    <label class="upload-label" title="Upload a .txt or .csv file with URLs (one per line or comma separated)">
+      Upload URL list (.txt / .csv)
+      <input type="file" id="urlFile" accept=".txt,.csv" class="file-input-hidden" />
+    </label>
+    <span class="small">OR</span>
+    <label class="upload-label" for="upload">Choose Local Images</label>
+    <input type="file" id="upload" accept="image/*" multiple class="file-input-hidden" />
+  </div>
+  <div class="small" style="margin-top:6px;color:#bfbfbf">Tip: URLs may fail to fetch if the source blocks cross-origin requests (CORS).</div>
 </div>
 
+<!-- Drop zone -->
 <div id="dropZone">
-  <p>Drag & Drop Images Here or Click to Select</p>
-  <label for="upload" class="upload-label">Choose Images</label>
-  <input type="file" id="upload" accept="image/jpeg,image/png,image/webp" multiple />
+  <p>Drag & Drop Images Here — or click to open file picker</p>
 </div>
 
-<div>
-  <label for="format">Output Format:</label>
-  <select id="format">
-    <option value="image/jpeg">JPEG</option>
-    <option value="image/png">PNG</option>
-    <option value="image/webp" selected>WebP</option>
-  </select>
-</div>
+<!-- format & quality -->
+<div class="controls">
+  <div class="flex-row">
+    <label for="format" class="small">Output Format:</label>
+    <select id="format">
+      <option value="image/webp" selected>WebP</option>
+      <option value="image/jpeg">JPEG</option>
+      <option value="image/png">PNG</option>
+    </select>
+  </div>
 
-<div>
-  <label for="quality">Compression Quality (10% - 100%):</label>
-  <input type="range" id="quality" min="10" max="100" step="10" value="80" />
-  <span id="qualityValue">80%</span>
-</div>
+  <div class="flex-row">
+    <label for="quality" class="small">Quality:</label>
+    <input type="range" id="quality" min="10" max="100" step="5" value="80" />
+    <span id="qualityValue">80%</span>
+  </div>
 
-<button onclick="optimizeImages()">Optimize Images</button>
+  <div>
+    <button id="optimizeBtn">Optimize Images</button>
+  </div>
+</div>
 
 <div id="error"></div>
+
 <div class="preview-container" id="previewContainer"></div>
 
-<button id="downloadAll" style="display:none;" onclick="downloadAllImages()">Download All as ZIP</button>
+<button id="downloadAll">Download All as ZIP</button>
 
+<!-- libs -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
 <script>
-let allFiles = []; // ⭐ NEW: Single array for all local + URL files
-let optimizedBlobs = [];
-
+/* -------------------------
+   State
+   ------------------------- */
 const uploadInput = document.getElementById('upload');
+const urlFileInput = document.getElementById('urlFile');
 const dropZone = document.getElementById('dropZone');
+const urlArea = document.getElementById('urlArea');
+const addUrlsBtn = document.getElementById('addUrlsBtn');
 const previewContainer = document.getElementById('previewContainer');
-const downloadAllButton = document.getElementById('downloadAll');
-const error = document.getElementById('error');
+const optimizeBtn = document.getElementById('optimizeBtn');
+const downloadAllBtn = document.getElementById('downloadAll');
+const errorEl = document.getElementById('error');
 const qualityInput = document.getElementById('quality');
 const qualityValue = document.getElementById('qualityValue');
+const formatSelect = document.getElementById('format');
 
-// Update quality label
-qualityInput.addEventListener('input', () => {
-  qualityValue.textContent = `${qualityInput.value}%`;
-});
+let allFiles = [];        // array of File objects (local + fetched)
+let optimizedBlobs = [];  // {blob, name}
+qualityValue.textContent = qualityInput.value + '%';
 
-// ⭐ FIXED DRAG & DROP
-dropZone.addEventListener('dragover', (e) => {
+/* -------------------------
+   Helpers
+   ------------------------- */
+function showError(text){
+  errorEl.textContent = text;
+  errorEl.style.display = 'block';
+}
+function clearError(){
+  errorEl.textContent = '';
+  errorEl.style.display = 'none';
+}
+function fileExtFromMime(mime){
+  return mime.split('/')[1] || 'bin';
+}
+function uniqueName(base, ext){
+  const t = Date.now().toString(36);
+  return `${base.replace(/\.[^/.]+$/, '') || 'image'}-${t}.${ext}`;
+}
+
+/* -------------------------
+   Drag & Drop (fixed)
+   ------------------------- */
+dropZone.addEventListener('dragover', e => {
   e.preventDefault();
   dropZone.classList.add('dragover');
 });
-
-dropZone.addEventListener('dragleave', () => {
+dropZone.addEventListener('dragleave', e => {
   dropZone.classList.remove('dragover');
 });
-
-dropZone.addEventListener('drop', (e) => {
+dropZone.addEventListener('drop', e => {
   e.preventDefault();
   dropZone.classList.remove('dragover');
-  const files = Array.from(e.dataTransfer.files);
-  addFiles(files);
+  const files = Array.from(e.dataTransfer.files || []);
+  if(files.length) addLocalFiles(files);
+});
+dropZone.addEventListener('click', () => {
+  uploadInput.click();
 });
 
-// File input
+/* -------------------------
+   Local file input
+   ------------------------- */
 uploadInput.addEventListener('change', () => {
-  const files = Array.from(uploadInput.files);
-  addFiles(files);
+  const files = Array.from(uploadInput.files || []);
+  if(files.length) addLocalFiles(files);
 });
 
-// ---------------------------
-// ADD FILES (from upload or URL)
-// ---------------------------
-function addFiles(files) {
-  const valid = files.filter(f => f.type.match("image/"));
-  if (valid.length === 0) {
-    showError("Please upload only image files.");
-    return;
-  }
+/* -------------------------
+   URL textarea: add URLs (one per line)
+   ------------------------- */
+addUrlsBtn.addEventListener('click', async () => {
+  const raw = urlArea.value.trim();
+  if(!raw) return showError('Paste one or more image URLs (one per line).');
+  const candidates = parseUrlText(raw);
+  await fetchAndAddUrls(candidates);
+  urlArea.value = '';
+});
+
+/* -------------------------
+   URL file (.txt/.csv)
+   ------------------------- */
+urlFileInput.addEventListener('change', async () => {
+  const f = urlFileInput.files[0];
+  if(!f) return;
+  const text = await f.text();
+  const urls = parseUrlText(text);
+  await fetchAndAddUrls(urls);
+  urlFileInput.value = '';
+});
+
+/* -------------------------
+   Parse URL text -> array
+   Accepts newline-separated and comma-separated
+   ------------------------- */
+function parseUrlText(text){
+  // split by line breaks, commas; trim; remove empties
+  const arr = text.split(/\r?\n|,/).map(s => s.trim()).filter(Boolean);
+  // dedupe
+  return Array.from(new Set(arr));
+}
+
+/* -------------------------
+   Fetch multiple URLs (bulk)
+   Converts each fetched Blob to a File and adds to allFiles
+   ------------------------- */
+async function fetchAndAddUrls(urls){
   clearError();
-  valid.forEach(file => allFiles.push(file));
+  if(!urls.length) return;
+  // Show quick status preview entries (so user sees progress)
+  urls.forEach(u => addStatusPreview(u, 'pending'));
+
+  const fetchPromises = urls.map(async (url, idx) => {
+    try {
+      // Attempt to fetch image (may fail due to CORS)
+      const resp = await fetch(url, { mode: 'cors' });
+      if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const blob = await resp.blob();
+      if(!blob.type.startsWith('image/')) throw new Error('Not an image');
+      const ext = fileExtFromMime(blob.type);
+      const file = new File([blob], uniqueName('url-image', ext), { type: blob.type });
+      allFiles.push(file);
+      updateStatusPreview(url, 'done');
+      return { success: true };
+    } catch (err) {
+      // Update status preview to show failure
+      updateStatusPreview(url, 'error', String(err));
+      return { success: false, url, error: String(err) };
+    }
+  });
+
+  const results = await Promise.all(fetchPromises);
+  // remove pending status placeholders and render full previews
+  renderPreviews();
+  const failed = results.filter(r => !r.success);
+  if(failed.length) {
+    showError(`${failed.length} URL(s) failed to fetch. Check console or status badges for details.`);
+    console.warn('URL fetch failures:', failed);
+  } else {
+    clearError();
+  }
+}
+
+/* -------------------------
+   Status preview helpers for URL fetching
+   ------------------------- */
+function addStatusPreview(url, status){
+  const div = document.createElement('div');
+  div.className = 'preview';
+  div.dataset.url = url;
+  div.innerHTML = `
+    <h3>${escapeHtml(url)}</h3>
+    <div class="image-pair">
+      <div><h4>Original (from URL)</h4><div class="image-info">Fetching…</div></div>
+      <div><h4>Optimized</h4><div class="image-info">—</div></div>
+    </div>
+  `;
+  previewContainer.prepend(div);
+}
+function updateStatusPreview(url, status, msg = ''){
+  const node = previewContainer.querySelector(`.preview[data-url="${cssEscape(url)}"]`);
+  if(!node) return;
+  const info = node.querySelector('.image-info');
+  if(status === 'done') info.textContent = 'Fetched ✓';
+  else if(status === 'error') info.textContent = `Failed: ${msg}`;
+  else info.textContent = msg || status;
+}
+
+/* -------------------------
+   Add local files to state
+   ------------------------- */
+function addLocalFiles(files){
+  clearError();
+  const images = files.filter(f => f.type && f.type.startsWith('image/'));
+  if(images.length === 0) return showError('No image files found in selection.');
+  images.forEach(f => allFiles.push(f));
   renderPreviews();
 }
 
-// ---------------------------
-// ⭐ NEW: ADD IMAGE FROM URL
-// ---------------------------
-async function addImageByURL() {
-  const url = document.getElementById("imageUrl").value.trim();
-  if (!url) return showError("Please enter an image URL.");
-
-  try {
-    const response = await fetch(url);
-    const blob = await response.blob();
-
-    if (!blob.type.startsWith("image/")) {
-      showError("URL must point to an actual image.");
-      return;
-    }
-
-    // Convert URL image to File
-    const fileName = "url-image-" + Date.now() + "." + blob.type.split("/")[1];
-    const file = new File([blob], fileName, { type: blob.type });
-
-    allFiles.push(file);
-    clearError();
-    renderPreviews();
-
-  } catch (err) {
-    showError("Failed to load image from URL.");
-  }
-}
-
-// ---------------------------
-// PREVIEW RENDERER
-// ---------------------------
-function renderPreviews() {
-  previewContainer.innerHTML = "";
-  optimizedBlobs = [];
-  downloadAllButton.style.display = "none";
-
-  allFiles.forEach((file, index) => {
+/* -------------------------
+   Render previews for allFiles
+   Each file gets Original + Optimized placeholders
+   ------------------------- */
+function renderPreviews(){
+  previewContainer.innerHTML = '';
+  allFiles.forEach((file, idx) => {
     const reader = new FileReader();
+    const index = idx;
     reader.onload = () => {
-      const div = document.createElement("div");
-      div.className = "preview";
-
+      const div = document.createElement('div');
+      div.className = 'preview';
+      div.dataset.index = index;
       div.innerHTML = `
-        <h3>${file.name}</h3>
+        <h3>Image ${index + 1}: ${escapeHtml(file.name)}</h3>
         <div class="image-pair">
           <div>
             <h4>Original</h4>
-            <img src="${reader.result}">
-            <p class="image-info">${(file.size / 1024).toFixed(2)} KB</p>
+            <img src="${reader.result}" alt="original-${index}" />
+            <p class="image-info">Size: ${(file.size/1024).toFixed(2)} KB • ${file.type || 'unknown'}</p>
           </div>
           <div>
             <h4>Optimized</h4>
-            <img id="optimizedPreview${index}">
+            <img id="optimizedPreview${index}" alt="optimized-${index}" />
             <p id="optimizedSize${index}" class="image-info"></p>
-            <a id="downloadLink${index}" class="download-link" style="display:none;">Download</a>
+            <a id="downloadLink${index}" class="download-link" style="display:none">Download</a>
           </div>
         </div>
       `;
-
       previewContainer.appendChild(div);
     };
     reader.readAsDataURL(file);
   });
 }
 
-// ---------------------------
-// OPTIMIZER
-// ---------------------------
-function optimizeImages() {
-  if (allFiles.length === 0) return showError("No images selected.");
+/* -------------------------
+   Optimize button
+   ------------------------- */
+optimizeBtn.addEventListener('click', () => optimizeImages());
 
+async function optimizeImages(){
   clearError();
+  if(allFiles.length === 0) return showError('No images to optimize.');
 
-  const outputFormat = document.getElementById("format").value;
-  const quality = outputFormat === 'image/png' ? undefined : qualityInput.value / 100;
-
+  optimizeBtn.disabled = true;
+  optimizeBtn.textContent = 'Optimizing…';
   optimizedBlobs = [];
+  downloadAllBtn.style.display = 'none';
 
-  allFiles.forEach((file, index) => {
+  const outputFormat = formatSelect.value;
+  const quality = (outputFormat === 'image/png') ? undefined : (qualityInput.value / 100);
+
+  // Process files sequentially to avoid memory spikes (but small batches can be parallelized)
+  for(let i=0; i<allFiles.length; i++){
+    const file = allFiles[i];
+    try {
+      const result = await optimizeSingleFile(file, outputFormat, quality);
+      optimizedBlobs.push({ blob: result.blob, name: result.name });
+      // update UI
+      const imgEl = document.getElementById(`optimizedPreview${i}`);
+      const sizeEl = document.getElementById(`optimizedSize${i}`);
+      const linkEl = document.getElementById(`downloadLink${i}`);
+      if(imgEl) imgEl.src = URL.createObjectURL(result.blob);
+      if(sizeEl) sizeEl.textContent = `${(result.blob.size/1024).toFixed(2)} KB • ${outputFormat.split('/')[1].toUpperCase()}`;
+      if(linkEl){
+        linkEl.href = URL.createObjectURL(result.blob);
+        linkEl.download = result.name;
+        linkEl.style.display = 'inline';
+        linkEl.textContent = 'Download';
+      }
+    } catch(err){
+      console.warn('Optimize error for', file.name, err);
+      // show error in preview if possible
+      const sizeEl = document.getElementById(`optimizedSize${i}`);
+      if(sizeEl) sizeEl.textContent = 'Optimization failed';
+      showError('Some images failed to optimize. See console for details.');
+    }
+  }
+
+  if(optimizedBlobs.length > 0) downloadAllBtn.style.display = 'inline-block';
+
+  optimizeBtn.disabled = false;
+  optimizeBtn.textContent = 'Optimize Images';
+}
+
+/* -------------------------
+   Optimize a single File -> returns {blob, name}
+   Uses canvas.toDataURL with chosen format + quality
+   ------------------------- */
+function optimizeSingleFile(file, outputFormat, quality){
+  return new Promise((resolve, reject) => {
     const img = new Image();
+    // Use object URL to load image
+    const url = URL.createObjectURL(file);
     img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-      canvas.getContext("2d").drawImage(img, 0, 0);
-
-      const dataURL = canvas.toDataURL(outputFormat, quality);
-      const blob = dataURLtoBlob(dataURL);
-
-      const newName = file.name.split(".")[0] + "." + outputFormat.split("/")[1];
-      optimizedBlobs.push({ blob, name: newName });
-
-      // Update preview
-      document.getElementById(`optimizedPreview${index}`).src = dataURL;
-      document.getElementById(`optimizedSize${index}`).textContent =
-        `${(blob.size / 1024).toFixed(2)} KB`;
-
-      const link = document.getElementById(`downloadLink${index}`);
-      link.href = URL.createObjectURL(blob);
-      link.download = newName;
-      link.style.display = "inline";
-
-      if (optimizedBlobs.length === allFiles.length) {
-        downloadAllButton.style.display = "block";
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        // convert
+        let dataUrl;
+        try {
+          dataUrl = canvas.toDataURL(outputFormat, quality);
+        } catch (e) {
+          // some browsers disallow quality with PNG mime, handle gracefully
+          try {
+            dataUrl = canvas.toDataURL(outputFormat);
+          } catch (err2){
+            URL.revokeObjectURL(url);
+            return reject(err2 || e);
+          }
+        }
+        const blob = dataURLToBlob(dataUrl);
+        const ext = outputFormat.split('/')[1];
+        const name = file.name ? file.name.split('.').slice(0,-1).join('.') + '.' + ext : uniqueName('image', ext);
+        URL.revokeObjectURL(url);
+        resolve({ blob, name });
+      } catch(err){
+        URL.revokeObjectURL(url);
+        reject(err);
       }
     };
-
-    img.src = URL.createObjectURL(file);
+    img.onerror = (ev) => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to load image for optimization (possibly CORS or corrupt file).'));
+    };
+    img.src = url;
   });
 }
 
-// Convert Base64 → Blob
-function dataURLtoBlob(dataURL) {
+/* -------------------------
+   Convert dataURL -> Blob
+   ------------------------- */
+function dataURLToBlob(dataURL){
   const parts = dataURL.split(',');
+  const mime = parts[0].match(/:(.*?);/)[1];
   const binary = atob(parts[1]);
-  const array = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) array[i] = binary.charCodeAt(i);
-  return new Blob([array], { type: parts[0].split(':')[1].split(';')[0] });
+  const arr = new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++) arr[i] = binary.charCodeAt(i);
+  return new Blob([arr], { type: mime });
 }
 
-// ZIP Download
-function downloadAllImages() {
+/* -------------------------
+   Download All as ZIP
+   ------------------------- */
+downloadAllBtn.addEventListener('click', async () => {
+  if(optimizedBlobs.length === 0) return;
+  downloadAllBtn.disabled = true;
+  downloadAllBtn.textContent = 'Preparing ZIP…';
   const zip = new JSZip();
-  optimizedBlobs.forEach(({ blob, name }) => zip.file(name, blob));
+  optimizedBlobs.forEach(item => zip.file(item.name, item.blob));
+  const content = await zip.generateAsync({ type: 'blob' });
+  saveAs(content, 'optimized_images.zip');
+  downloadAllBtn.disabled = false;
+  downloadAllBtn.textContent = 'Download All as ZIP';
+});
 
-  zip.generateAsync({ type: "blob" }).then(content => {
-    saveAs(content, "optimized_images.zip");
-  });
-}
+/* -------------------------
+   Utilities
+   ------------------------- */
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function cssEscape(s) { return s.replace(/([^\w-])/g, m => '\\' + m); }
 
-// Errors
-function showError(msg) {
-  error.textContent = msg;
-  error.style.display = "block";
-}
-
-function clearError() {
-  error.style.display = "none";
-}
+/* -------------------------
+   Optional: expose clear-all (not shown) — but keep simple for now
+   ------------------------- */
 </script>
 
 </body>
 </html>
-
