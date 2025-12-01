@@ -4,6 +4,8 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Multiple Image Optimizer — Upload + Bulk URLs (Light/Dark)</title>
+<!-- Add Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <style>
   /* ---------- Fonts & reset ---------- */
@@ -14,7 +16,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html,body { height: 100%; }
 
-  /* ---------- Theme variables (light & dark) ---------- */
+  /* ---------- Improved dark theme with Tailwind ---------- */
   :root {
     --bg: #f5f7fb;
     --card: #ffffff;
@@ -28,16 +30,16 @@
     --glass: rgba(255,255,255,0.6);
   }
   [data-theme="dark"] {
-    --bg: #0f1724;
-    --card: #111827;
-    --muted: #9ca3af;
-    --text: #e6eef6;
+    --bg: #0f172a;
+    --card: #1e293b;
+    --muted: #94a3b8;
+    --text: #f1f5f9;
     --accent: #22c55e;
     --accent-2: #10b981;
-    --danger: #ff6b6b;
-    --border: #1f2937;
-    --shadow: 0 6px 20px rgba(2,6,23,0.6);
-    --glass: rgba(11,15,20,0.6);
+    --danger: #ef4444;
+    --border: #334155;
+    --shadow: 0 6px 20px rgba(0,0,0,0.4);
+    --glass: rgba(30,41,59,0.6);
   }
 
   body {
@@ -58,52 +60,172 @@
   .sub { color:var(--muted); font-size:0.9rem; }
 
   /* ---------- Controls ---------- */
-  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px; box-shadow:var(--shadow); }
+  .card { 
+    background:var(--card); 
+    border:1px solid var(--border); 
+    border-radius:12px; 
+    padding:14px; 
+    box-shadow:var(--shadow);
+    backdrop-filter: blur(10px);
+  }
   .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
   .col { display:flex; flex-direction:column; gap:8px; }
 
   textarea, input[type="text"], select {
-    background:transparent; border:1px solid var(--border); padding:10px 12px; border-radius:8px; color:var(--text);
-    min-width:0; outline:none;
+    background:transparent; 
+    border:1px solid var(--border); 
+    padding:10px 12px; 
+    border-radius:8px; 
+    color:var(--text);
+    min-width:0; 
+    outline:none;
+    transition: border-color 0.2s ease;
+  }
+  textarea:focus, input[type="text"]:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
   }
   textarea { min-height:96px; resize:vertical; width:100%; }
   .small { font-size:0.88rem; color:var(--muted); }
 
   .btn {
-    display:inline-flex; align-items:center; gap:8px;
-    background:linear-gradient(180deg,var(--accent), var(--accent-2)); color:white; border:none; padding:10px 14px; border-radius:10px;
-    cursor:pointer; font-weight:600;
+    display:inline-flex; 
+    align-items:center; 
+    gap:8px;
+    background:linear-gradient(180deg,var(--accent), var(--accent-2)); 
+    color:white; 
+    border:none; 
+    padding:10px 14px; 
+    border-radius:10px;
+    cursor:pointer; 
+    font-weight:600;
+    transition: all 0.2s ease;
   }
-  .btn.secondary { background:transparent; border:1px solid var(--border); color:var(--text); }
-  .btn.ghost { background:transparent; border: 1px dashed var(--border); color:var(--muted); }
+  .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  .btn.secondary { 
+    background:transparent; 
+    border:1px solid var(--border); 
+    color:var(--text);
+  }
+  .btn.ghost { 
+    background:transparent; 
+    border: 1px dashed var(--border); 
+    color:var(--muted);
+  }
 
-  .upload-label { cursor:pointer; padding:10px 12px; border-radius:8px; border:1px solid var(--border); color:var(--muted); background:var(--glass); }
+  .upload-label { 
+    cursor:pointer; 
+    padding:10px 12px; 
+    border-radius:8px; 
+    border:1px solid var(--border); 
+    color:var(--muted); 
+    background:var(--glass);
+    transition: all 0.2s ease;
+  }
+  .upload-label:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
 
   /* ---------- Drop zone ---------- */
-  #dropZone { margin-top:12px; padding:20px; text-align:center; border-radius:10px; border:2px dashed var(--border); background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent); cursor:pointer; }
-  #dropZone.drag { border-color:var(--accent); box-shadow: 0 8px 30px rgba(16,185,129,0.06); }
+  #dropZone { 
+    margin-top:12px; 
+    padding:20px; 
+    text-align:center; 
+    border-radius:10px; 
+    border:2px dashed var(--border); 
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent); 
+    cursor:pointer;
+    transition: all 0.3s ease;
+  }
+  #dropZone.drag { 
+    border-color:var(--accent); 
+    box-shadow: 0 8px 30px rgba(16,185,129,0.2);
+    background: rgba(34, 197, 94, 0.05);
+  }
 
   /* ---------- Options ---------- */
   .controls-grid { display:flex; gap:12px; align-items:center; margin-top:12px; flex-wrap:wrap; }
   select, input[type="range"] { padding:8px; }
-  #qualityValue { font-weight:700; color:var(--muted); min-width:48px; text-align:center; }
+  input[type="range"] {
+    -webkit-appearance: none;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  #qualityValue { font-weight:700; color:var(--accent); min-width:48px; text-align:center; }
 
   /* ---------- Preview list ---------- */
-  .preview-container { margin-top:18px; display:flex; flex-direction:column; gap:14px; }
-  .preview { display:flex; gap:14px; padding:12px; border-radius:10px; align-items:flex-start; border:1px solid var(--border); background:linear-gradient(180deg, transparent, rgba(0,0,0,0.01)); }
+  .preview-container { 
+    margin-top:18px; 
+    display:flex; 
+    flex-direction:column; 
+    gap:14px; 
+  }
+  .preview { 
+    display:flex; 
+    gap:14px; 
+    padding:12px; 
+    border-radius:10px; 
+    align-items:flex-start; 
+    border:1px solid var(--border); 
+    background:linear-gradient(180deg, transparent, rgba(0,0,0,0.01));
+    transition: all 0.2s ease;
+  }
+  .preview:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow);
+  }
   .preview .left { width:160px; flex-shrink:0; text-align:center; }
   .preview .left img { width:150px; height:auto; border-radius:8px; display:block; margin:0 auto 8px; border:1px solid var(--border); }
   .preview .right { flex:1; display:flex; flex-direction:column; gap:8px; }
   .meta { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .tag { padding:6px 8px; border-radius:8px; background:var(--glass); color:var(--muted); font-size:0.85rem; border:1px solid var(--border); }
+  .tag { 
+    padding:6px 8px; 
+    border-radius:8px; 
+    background:var(--glass); 
+    color:var(--muted); 
+    font-size:0.85rem; 
+    border:1px solid var(--border);
+    backdrop-filter: blur(10px);
+  }
   .status { font-weight:700; color:var(--muted); font-size:0.9rem; }
 
-  .download-link { color:var(--accent); text-decoration:none; font-weight:600; }
+  .download-link { 
+    color:var(--accent); 
+    text-decoration:none; 
+    font-weight:600;
+    transition: color 0.2s ease;
+  }
+  .download-link:hover {
+    color: var(--accent-2);
+    text-decoration: underline;
+  }
   .error { color:var(--danger); font-weight:700; }
   .muted { color:var(--muted); font-size:0.9rem; }
 
   /* ---------- Footer ---------- */
-  footer { margin-top:18px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+  footer { 
+    margin-top:18px; 
+    display:flex; 
+    justify-content:space-between; 
+    align-items:center; 
+    gap:12px; 
+    flex-wrap:wrap; 
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
   .actions { display:flex; gap:10px; }
 
   /* ---------- Responsive ---------- */
@@ -112,6 +234,17 @@
     .preview .left { width:100%; }
     .preview .right { width:100%; }
     header { flex-direction:column; align-items:flex-start; gap:8px; }
+  }
+
+  /* Dark mode improvements with Tailwind */
+  [data-theme="dark"] .card {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  }
+  [data-theme="dark"] .btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  }
+  [data-theme="dark"] .preview {
+    background: linear-gradient(135deg, rgba(30,41,59,0.7), rgba(15,23,42,0.7));
   }
 </style>
 </head>
@@ -236,6 +369,7 @@
       root.setAttribute('data-theme', theme);
       localStorage.setItem('imgopt_theme', theme);
       themeToggle.textContent = theme === 'dark' ? 'Switch to Light' : 'Switch to Dark';
+      themeLabel.textContent = theme === 'dark' ? 'Dark Mode' : 'Light Mode';
     }
     const savedTheme = localStorage.getItem('imgopt_theme') || 'dark';
     applyTheme(savedTheme);
@@ -259,7 +393,16 @@
     function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
     function fileExtFromMime(mime){ return (mime || 'image').split('/').pop().split('+')[0]; }
-    function uniqueName(base, ext='png'){ const t = Date.now().toString(36) + Math.floor(Math.random()*1000); return `${base.replace(/\.[^/.]+$/, '')}-${t}.${ext}`; }
+    function getFileExtension(filename) {
+      return filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
+    }
+    
+    // FIX 2: Keep original filename with new extension
+    function getOptimizedFileName(originalName, outputFormat) {
+      const baseName = originalName.replace(/\.[^/.]+$/, "");
+      const ext = outputFormat.split('/')[1];
+      return `${baseName}.${ext}`;
+    }
 
     function updateInfoText(){
       if(allFiles.length === 0) {
@@ -323,6 +466,7 @@
     async function fetchAndAddUrls(urls){
       clearError();
       if(!urls.length) return;
+      
       // Create placeholder entries
       urls.forEach(url => {
         fetchingMap.set(url, { status: 'pending', message: 'Waiting' });
@@ -333,13 +477,42 @@
       for(const url of urls){
         try {
           updateUrlStatus(url, 'fetching', 'Fetching...');
-          // Attempt to fetch as blob (regular CORS)
-          const resp = await fetch(url, { mode: 'cors' });
-          if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
-          const blob = await resp.blob();
-          if(!blob.type.startsWith('image/')) throw new Error('Fetched resource is not an image.');
-          const ext = fileExtFromMime(blob.type);
-          const file = new File([blob], uniqueName('url-image', ext), { type: blob.type });
+          
+          // FIX 1: Add CORS proxy fallback for URLs that fail
+          let blob;
+          try {
+            // First try direct fetch
+            const resp = await fetch(url);
+            if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            blob = await resp.blob();
+            if(!blob.type.startsWith('image/')) throw new Error('Fetched resource is not an image.');
+          } catch (directError) {
+            console.warn('Direct fetch failed, trying with CORS proxy:', directError);
+            
+            // Try with CORS proxy if direct fetch fails
+            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+            const proxyResp = await fetch(proxyUrl);
+            if(!proxyResp.ok) throw new Error(`CORS proxy failed: HTTP ${proxyResp.status}`);
+            blob = await proxyResp.blob();
+            if(!blob.type.startsWith('image/')) throw new Error('Fetched resource is not an image.');
+          }
+          
+          // Extract filename from URL or generate one
+          let filename;
+          try {
+            const urlObj = new URL(url);
+            const pathname = urlObj.pathname;
+            filename = pathname.split('/').pop() || 'image';
+            if (!filename.includes('.')) {
+              const ext = fileExtFromMime(blob.type);
+              filename = `${filename}.${ext}`;
+            }
+          } catch {
+            const ext = fileExtFromMime(blob.type);
+            filename = `image-${Date.now()}.${ext}`;
+          }
+          
+          const file = new File([blob], filename, { type: blob.type });
           allFiles.push(file);
           updateUrlStatus(url, 'done', 'Fetched ✓');
           renderPreviews(); // re-render to include newly added file
@@ -389,12 +562,35 @@
         if(retryBtn) retryBtn.addEventListener('click', async () => {
           updateUrlStatus(url, 'fetching', 'Retrying...');
           try {
-            const resp = await fetch(url, { mode: 'cors' });
-            if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            const blob = await resp.blob();
-            if(!blob.type.startsWith('image/')) throw new Error('Not an image');
-            const ext = fileExtFromMime(blob.type);
-            const file = new File([blob], uniqueName('url-image', ext), { type: blob.type });
+            let blob;
+            try {
+              const resp = await fetch(url);
+              if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+              blob = await resp.blob();
+              if(!blob.type.startsWith('image/')) throw new Error('Not an image');
+            } catch {
+              const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+              const proxyResp = await fetch(proxyUrl);
+              if(!proxyResp.ok) throw new Error(`CORS proxy failed: HTTP ${proxyResp.status}`);
+              blob = await proxyResp.blob();
+              if(!blob.type.startsWith('image/')) throw new Error('Not an image');
+            }
+            
+            let filename;
+            try {
+              const urlObj = new URL(url);
+              const pathname = urlObj.pathname;
+              filename = pathname.split('/').pop() || 'image';
+              if (!filename.includes('.')) {
+                const ext = fileExtFromMime(blob.type);
+                filename = `${filename}.${ext}`;
+              }
+            } catch {
+              const ext = fileExtFromMime(blob.type);
+              filename = `image-${Date.now()}.${ext}`;
+            }
+            
+            const file = new File([blob], filename, { type: blob.type });
             allFiles.push(file);
             updateUrlStatus(url, 'done', 'Fetched ✓');
             renderPreviews();
@@ -504,7 +700,12 @@
               const dl = document.getElementById(`dl-${idx}`);
               if(optImg) optImg.src = URL.createObjectURL(blob);
               if(optSz) optSz.textContent = `${(blob.size/1024).toFixed(1)} KB • ${outputFormat.split('/')[1].toUpperCase()}`;
-              if(dl) { dl.href = URL.createObjectURL(blob); dl.download = name; dl.style.display = 'inline-block'; dl.textContent = 'Download'; }
+              if(dl) { 
+                dl.href = URL.createObjectURL(blob); 
+                dl.download = name; 
+                dl.style.display = 'inline-block'; 
+                dl.textContent = 'Download'; 
+              }
             } catch (err) {
               console.warn('Single optimize error', err);
               showError('Failed to optimize image. See console for details.');
@@ -524,8 +725,6 @@
           });
         }
       });
-
-      // Clean up any object URLs? Not revoking here because previews still show them; revoke after removal if needed.
     }
 
     // ---------- Optimize all ----------
@@ -557,7 +756,12 @@
             const dl = node.querySelector(`#dl-${index}`);
             if(optImg) optImg.src = URL.createObjectURL(blob);
             if(optSz) optSz.textContent = `${(blob.size/1024).toFixed(1)} KB • ${outputFormat.split('/')[1].toUpperCase()}`;
-            if(dl) { dl.href = URL.createObjectURL(blob); dl.download = name; dl.style.display = 'inline-block'; dl.textContent = 'Download'; }
+            if(dl) { 
+              dl.href = URL.createObjectURL(blob); 
+              dl.download = name; 
+              dl.style.display = 'inline-block'; 
+              dl.textContent = 'Download'; 
+            }
           }
         } catch (err) {
           console.warn('Optimize error', allFiles[i].name, err);
@@ -579,8 +783,11 @@
     function optimizeSingleFile(file, outputFormat, quality){
       return new Promise((resolve, reject) => {
         const img = new Image();
-        // to allow loading local blob/object URL
         const objectUrl = URL.createObjectURL(file);
+        
+        // Allow loading images from different origins
+        img.crossOrigin = 'anonymous';
+        
         img.onload = () => {
           try {
             const canvas = document.createElement('canvas');
@@ -589,69 +796,59 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0);
 
-            // prefer toBlob when available (async & memory-friendly)
+            // FIX 2: Use original filename with new extension
+            const optimizedName = getOptimizedFileName(file.name, outputFormat);
+
             if(canvas.toBlob){
               try {
                 canvas.toBlob((blob) => {
                   if(!blob) {
                     // fallback to toDataURL
                     try {
-                      const dataUrl = canvas.toDataURL(outputFormat);
+                      const dataUrl = canvas.toDataURL(outputFormat, quality);
                       const fallback = dataURLToBlob(dataUrl);
-                      const name = uniqueName(file.name.split('.').slice(0, -1).join('.') || 'image', outputFormat.split('/')[1]);
                       URL.revokeObjectURL(objectUrl);
-                      resolve({ blob: fallback, name });
+                      resolve({ blob: fallback, name: optimizedName });
                     } catch (e) {
                       URL.revokeObjectURL(objectUrl);
                       reject(e);
                     }
                     return;
                   }
-                  // If browser honored requested type in toBlob, good. Otherwise we can convert via canvas.toDataURL with mime param
-                  // Some browsers ignore quality for PNG, handle separately
+                  
                   if(outputFormat && blob.type !== outputFormat){
-                    // try to make the desired type using toDataURL
                     try {
                       const dataUrl = canvas.toDataURL(outputFormat, quality);
                       const converted = dataURLToBlob(dataUrl);
-                      const name = uniqueName(file.name.split('.').slice(0, -1).join('.') || 'image', outputFormat.split('/')[1]);
                       URL.revokeObjectURL(objectUrl);
-                      resolve({ blob: converted, name });
+                      resolve({ blob: converted, name: optimizedName });
                     } catch (e){
-                      // fallback to blob returned
-                      const name = uniqueName(file.name.split('.').slice(0, -1).join('.') || 'image', fileExtFromMime(blob.type));
+                      const name = getOptimizedFileName(file.name, blob.type);
                       URL.revokeObjectURL(objectUrl);
                       resolve({ blob, name });
                     }
                   } else {
-                    // Good blob
-                    const ext = outputFormat ? outputFormat.split('/')[1] : fileExtFromMime(blob.type);
-                    const name = uniqueName(file.name.split('.').slice(0, -1).join('.') || 'image', ext);
                     URL.revokeObjectURL(objectUrl);
-                    resolve({ blob, name });
+                    resolve({ blob, name: optimizedName });
                   }
                 }, outputFormat, quality);
               } catch (err) {
-                // fallback to toDataURL path
                 try {
                   const dataUrl = canvas.toDataURL(outputFormat, quality);
                   const blob = dataURLToBlob(dataUrl);
-                  const name = uniqueName(file.name.split('.').slice(0, -1).join('.') || 'image', outputFormat.split('/')[1]);
                   URL.revokeObjectURL(objectUrl);
-                  resolve({ blob, name });
+                  resolve({ blob, name: optimizedName });
                 } catch(e){
                   URL.revokeObjectURL(objectUrl);
                   reject(e);
                 }
               }
             } else {
-              // very old browsers
               try {
                 const dataUrl = canvas.toDataURL(outputFormat, quality);
                 const blob = dataURLToBlob(dataUrl);
-                const name = uniqueName(file.name.split('.').slice(0, -1).join('.') || 'image', outputFormat.split('/')[1]);
                 URL.revokeObjectURL(objectUrl);
-                resolve({ blob, name });
+                resolve({ blob, name: optimizedName });
               } catch(e){
                 URL.revokeObjectURL(objectUrl);
                 reject(e);
@@ -666,9 +863,6 @@
           URL.revokeObjectURL(objectUrl);
           reject(new Error('Failed to load image into canvas (CORS or corrupt file).'));
         };
-
-        // Important: set crossOrigin if we want to attempt CORS-enabled remote images.
-        // For local files or blob URLs, this is fine. For remote images fetched as blobs, crossorigin isn't needed.
         img.src = objectUrl;
       });
     }
@@ -729,9 +923,6 @@
     function encodeForId(s){
       return encodeURIComponent(s).replace(/%/g,'_');
     }
-
-    // ---------- Small helpers ----------
-    function ensureDownloadAllBtnVisible(){ if(optimizedBlobs.length>0) downloadAllBtn.style.display='inline-block'; else downloadAllBtn.style.display='none'; }
 
     // ---------- bootstrap: expose fetch via console if needed ----------
     window.__imgopt = { allFiles, optimizedBlobs };
