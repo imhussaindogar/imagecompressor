@@ -1,938 +1,1638 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Multiple Image Optimizer — Upload + Bulk URLs (Light/Dark)</title>
-<!-- Add Tailwind CSS -->
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<style>
-  /* ---------- Fonts & reset ---------- */
-  @font-face {
-    font-family: "InterVar";
-    src: local("Inter"), local("Inter var");
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html,body { height: 100%; }
-
-  /* ---------- Improved dark theme with Tailwind ---------- */
-  :root {
-    --bg: #f5f7fb;
-    --card: #ffffff;
-    --muted: #6b7280;
-    --text: #111827;
-    --accent: #115e59;
-    --accent-2: #10b981;
-    --danger: #dc2626;
-    --border: #e6e9ef;
-    --shadow: 0 6px 18px rgba(16,24,40,0.06);
-    --glass: rgba(255,255,255,0.6);
-  }
-  [data-theme="dark"] {
-    --bg: #0f172a;
-    --card: #1e293b;
-    --muted: #94a3b8;
-    --text: #f1f5f9;
-    --accent: #22c55e;
-    --accent-2: #10b981;
-    --danger: #ef4444;
-    --border: #334155;
-    --shadow: 0 6px 20px rgba(0,0,0,0.4);
-    --glass: rgba(30,41,59,0.6);
-  }
-
-  body {
-    background: linear-gradient(180deg,var(--bg), rgba(0,0,0,0.02));
-    color: var(--text);
-    font-family: InterVar, Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    max-width: 1100px;
-    margin: 28px auto;
-    padding: 22px;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    line-height: 1.45;
-  }
-
-  /* ---------- Header ---------- */
-  header { display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px; }
-  h1 { font-size:1.25rem; font-weight:700; margin:0; }
-  .sub { color:var(--muted); font-size:0.9rem; }
-
-  /* ---------- Controls ---------- */
-  .card { 
-    background:var(--card); 
-    border:1px solid var(--border); 
-    border-radius:12px; 
-    padding:14px; 
-    box-shadow:var(--shadow);
-    backdrop-filter: blur(10px);
-  }
-  .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
-  .col { display:flex; flex-direction:column; gap:8px; }
-
-  textarea, input[type="text"], select {
-    background:transparent; 
-    border:1px solid var(--border); 
-    padding:10px 12px; 
-    border-radius:8px; 
-    color:var(--text);
-    min-width:0; 
-    outline:none;
-    transition: border-color 0.2s ease;
-  }
-  textarea:focus, input[type="text"]:focus, select:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
-  }
-  textarea { min-height:96px; resize:vertical; width:100%; }
-  .small { font-size:0.88rem; color:var(--muted); }
-
-  .btn {
-    display:inline-flex; 
-    align-items:center; 
-    gap:8px;
-    background:linear-gradient(180deg,var(--accent), var(--accent-2)); 
-    color:white; 
-    border:none; 
-    padding:10px 14px; 
-    border-radius:10px;
-    cursor:pointer; 
-    font-weight:600;
-    transition: all 0.2s ease;
-  }
-  .btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  }
-  .btn.secondary { 
-    background:transparent; 
-    border:1px solid var(--border); 
-    color:var(--text);
-  }
-  .btn.ghost { 
-    background:transparent; 
-    border: 1px dashed var(--border); 
-    color:var(--muted);
-  }
-
-  .upload-label { 
-    cursor:pointer; 
-    padding:10px 12px; 
-    border-radius:8px; 
-    border:1px solid var(--border); 
-    color:var(--muted); 
-    background:var(--glass);
-    transition: all 0.2s ease;
-  }
-  .upload-label:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  /* ---------- Drop zone ---------- */
-  #dropZone { 
-    margin-top:12px; 
-    padding:20px; 
-    text-align:center; 
-    border-radius:10px; 
-    border:2px dashed var(--border); 
-    background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent); 
-    cursor:pointer;
-    transition: all 0.3s ease;
-  }
-  #dropZone.drag { 
-    border-color:var(--accent); 
-    box-shadow: 0 8px 30px rgba(16,185,129,0.2);
-    background: rgba(34, 197, 94, 0.05);
-  }
-
-  /* ---------- Options ---------- */
-  .controls-grid { display:flex; gap:12px; align-items:center; margin-top:12px; flex-wrap:wrap; }
-  select, input[type="range"] { padding:8px; }
-  input[type="range"] {
-    -webkit-appearance: none;
-    height: 6px;
-    background: var(--border);
-    border-radius: 3px;
-  }
-  input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 18px;
-    height: 18px;
-    background: var(--accent);
-    border-radius: 50%;
-    cursor: pointer;
-  }
-  #qualityValue { font-weight:700; color:var(--accent); min-width:48px; text-align:center; }
-
-  /* ---------- Preview list ---------- */
-  .preview-container { 
-    margin-top:18px; 
-    display:flex; 
-    flex-direction:column; 
-    gap:14px; 
-  }
-  .preview { 
-    display:flex; 
-    gap:14px; 
-    padding:12px; 
-    border-radius:10px; 
-    align-items:flex-start; 
-    border:1px solid var(--border); 
-    background:linear-gradient(180deg, transparent, rgba(0,0,0,0.01));
-    transition: all 0.2s ease;
-  }
-  .preview:hover {
-    border-color: var(--accent);
-    box-shadow: var(--shadow);
-  }
-  .preview .left { width:160px; flex-shrink:0; text-align:center; }
-  .preview .left img { width:150px; height:auto; border-radius:8px; display:block; margin:0 auto 8px; border:1px solid var(--border); }
-  .preview .right { flex:1; display:flex; flex-direction:column; gap:8px; }
-  .meta { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .tag { 
-    padding:6px 8px; 
-    border-radius:8px; 
-    background:var(--glass); 
-    color:var(--muted); 
-    font-size:0.85rem; 
-    border:1px solid var(--border);
-    backdrop-filter: blur(10px);
-  }
-  .status { font-weight:700; color:var(--muted); font-size:0.9rem; }
-
-  .download-link { 
-    color:var(--accent); 
-    text-decoration:none; 
-    font-weight:600;
-    transition: color 0.2s ease;
-  }
-  .download-link:hover {
-    color: var(--accent-2);
-    text-decoration: underline;
-  }
-  .error { color:var(--danger); font-weight:700; }
-  .muted { color:var(--muted); font-size:0.9rem; }
-
-  /* ---------- Footer ---------- */
-  footer { 
-    margin-top:18px; 
-    display:flex; 
-    justify-content:space-between; 
-    align-items:center; 
-    gap:12px; 
-    flex-wrap:wrap; 
-    padding-top: 16px;
-    border-top: 1px solid var(--border);
-  }
-  .actions { display:flex; gap:10px; }
-
-  /* ---------- Responsive ---------- */
-  @media (max-width:900px) {
-    .preview { flex-direction:column; align-items:center; text-align:center; }
-    .preview .left { width:100%; }
-    .preview .right { width:100%; }
-    header { flex-direction:column; align-items:flex-start; gap:8px; }
-  }
-
-  /* Dark mode improvements with Tailwind */
-  [data-theme="dark"] .card {
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-  }
-  [data-theme="dark"] .btn {
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  }
-  [data-theme="dark"] .preview {
-    background: linear-gradient(135deg, rgba(30,41,59,0.7), rgba(15,23,42,0.7));
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiple Image Optimizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        .dark ::-webkit-scrollbar-track {
+            background: #374151;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #6b7280;
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+        
+        /* Smooth transitions */
+        * {
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        
+        /* Loading animation */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .animate-spin-slow {
+            animation: spin 1.5s linear infinite;
+        }
+        
+        /* Pulse animation */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .animate-pulse-slow {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        /* Shake animation */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+            20%, 40%, 60%, 80% { transform: translateX(2px); }
+        }
+        
+        .animate-shake {
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        /* Progress bar animation */
+        @keyframes progress {
+            0% { width: 0%; }
+            50% { width: 100%; }
+            100% { width: 0%; }
+        }
+        
+        .animate-progress {
+            animation: progress 2s linear infinite;
+        }
+        
+        /* Image hover effects */
+        .img-hover-zoom {
+            overflow: hidden;
+            border-radius: 0.5rem;
+        }
+        
+        .img-hover-zoom img {
+            transition: transform 0.5s ease;
+        }
+        
+        .img-hover-zoom:hover img {
+            transform: scale(1.05);
+        }
+        
+        /* Glass effect */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .dark .glass-effect {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Gradient text */
+        .gradient-text {
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Card hover effect */
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        /* File upload area */
+        .file-upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        
+        .dark .file-upload-area {
+            border-color: #4b5563;
+        }
+        
+        .file-upload-area:hover, .file-upload-area.drag-over {
+            border-color: #3b82f6;
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+        
+        .dark .file-upload-area:hover, .dark .file-upload-area.drag-over {
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        
+        /* Custom range slider */
+        input[type="range"] {
+            -webkit-appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: linear-gradient(to right, #3b82f6, #8b5cf6);
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2px solid #3b82f6;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .dark input[type="range"]::-webkit-slider-thumb {
+            background: #1f2937;
+            border-color: #60a5fa;
+        }
+        
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+        }
+        
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: #1f2937;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .dark .tooltip .tooltip-text {
+            background-color: #374151;
+        }
+        
+        /* Fade in animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
 </head>
-<body>
-  <div id="root" class="page" data-theme="dark">
-    <header>
-      <div>
-        <h1>Multiple Image Optimizer</h1>
-        <div class="sub">Upload images, paste bulk URLs, convert/compress and download individually or as ZIP</div>
-      </div>
-
-      <div class="row" style="align-items:center;">
-        <div class="small" id="themeLabel">Theme</div>
-        <button id="themeToggle" class="btn secondary">Toggle Theme</button>
-      </div>
-    </header>
-
-    <!-- Main controls -->
-    <section class="card">
-      <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
-        <div style="flex:1;min-width:300px;">
-          <label class="small">Paste image URLs (one per line)</label>
-          <textarea id="urlArea" placeholder="https://example.com/a.jpg&#10;https://example.com/b.png"></textarea>
-
-          <div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap;">
-            <button id="addUrlsBtn" class="btn">Add URLs</button>
-
-            <label class="upload-label" title="Upload .txt or .csv with URLs">
-              Upload URL list (.txt / .csv)
-              <input id="urlFile" type="file" accept=".txt,.csv" style="display:none">
-            </label>
-
-            <label class="upload-label" title="Choose local image files">
-              Choose Local Images
-              <input id="upload" type="file" accept="image/*" multiple style="display:none">
-            </label>
-
-            <div class="small muted">Tip: some URLs may fail to fetch due to remote CORS policies (see status)</div>
-          </div>
-
-        </div>
-
-        <div style="width:360px;min-width:260px;">
-          <div class="col">
-            <div class="small">Drag & drop images below (or click the area)</div>
-            <div id="dropZone">Drag & Drop Images Here — or click to open file picker</div>
-
-            <div class="controls-grid">
-              <div class="row" style="align-items:center;">
-                <label class="small" for="format">Output format</label>
-                <select id="format">
-                  <option value="image/webp">WebP (recommended)</option>
-                  <option value="image/jpeg">JPEG</option>
-                  <option value="image/png">PNG</option>
-                </select>
-              </div>
-
-              <div class="row" style="align-items:center;">
-                <label class="small" for="quality">Quality</label>
-                <input id="quality" type="range" min="10" max="100" step="5" value="80">
-                <div id="qualityValue" class="small">80%</div>
-              </div>
-
-              <div style="margin-left:auto;">
-                <button id="optimizeBtn" class="btn">Optimize Images</button>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Error / Info -->
-    <div id="error" style="margin-top:12px;display:none;"></div>
-
-    <!-- Preview list -->
-    <div class="preview-container card" id="previewContainer" style="margin-top:18px;"></div>
-
-    <!-- Footer actions -->
-    <footer>
-      <div class="small muted" id="infoText">No images loaded.</div>
-      <div class="actions">
-        <button id="downloadAllBtn" class="btn ghost" style="display:none">Download All as ZIP</button>
-        <button id="clearBtn" class="btn secondary">Clear All</button>
-      </div>
-    </footer>
-  </div>
-
-  <!-- Libraries -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-
-  <script>
-  (function(){
-    // ---------- Elements ----------
-    const root = document.getElementById('root');
-    const themeToggle = document.getElementById('themeToggle');
-    const themeLabel = document.getElementById('themeLabel');
-    const urlArea = document.getElementById('urlArea');
-    const addUrlsBtn = document.getElementById('addUrlsBtn');
-    const urlFile = document.getElementById('urlFile');
-    const uploadInput = document.getElementById('upload');
-    const dropZone = document.getElementById('dropZone');
-    const previewContainer = document.getElementById('previewContainer');
-    const optimizeBtn = document.getElementById('optimizeBtn');
-    const formatSelect = document.getElementById('format');
-    const qualityInput = document.getElementById('quality');
-    const qualityValue = document.getElementById('qualityValue');
-    const downloadAllBtn = document.getElementById('downloadAllBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    const errorEl = document.getElementById('error');
-    const infoText = document.getElementById('infoText');
-
-    // ---------- State ----------
-    let allFiles = []; // array of File objects
-    let optimizedBlobs = []; // {blob, name}
-    let fetchingMap = new Map(); // url -> status
-
-    // ---------- Theme ----------
-    function applyTheme(theme){
-      root.setAttribute('data-theme', theme);
-      localStorage.setItem('imgopt_theme', theme);
-      themeToggle.textContent = theme === 'dark' ? 'Switch to Light' : 'Switch to Dark';
-      themeLabel.textContent = theme === 'dark' ? 'Dark Mode' : 'Light Mode';
-    }
-    const savedTheme = localStorage.getItem('imgopt_theme') || 'dark';
-    applyTheme(savedTheme);
-
-    themeToggle.addEventListener('click', () => {
-      const current = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-      applyTheme(current === 'dark' ? 'light' : 'dark');
-    });
-
-    // ---------- Quality label ----------
-    qualityValue.textContent = qualityInput.value + '%';
-    qualityInput.addEventListener('input', () => qualityValue.textContent = qualityInput.value + '%');
-
-    // ---------- Utility helpers ----------
-    function showError(msg){
-      errorEl.style.display = 'block';
-      errorEl.innerHTML = '<div class="error">' + escapeHtml(msg) + '</div>';
-    }
-    function clearError(){ errorEl.style.display = 'none'; errorEl.innerHTML = ''; }
-
-    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-    function fileExtFromMime(mime){ return (mime || 'image').split('/').pop().split('+')[0]; }
-    function getFileExtension(filename) {
-      return filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
-    }
-    
-    // FIX 2: Keep original filename with new extension
-    function getOptimizedFileName(originalName, outputFormat) {
-      const baseName = originalName.replace(/\.[^/.]+$/, "");
-      const ext = outputFormat.split('/')[1];
-      return `${baseName}.${ext}`;
-    }
-
-    function updateInfoText(){
-      if(allFiles.length === 0) {
-        infoText.textContent = 'No images loaded.';
-      } else {
-        infoText.textContent = `${allFiles.length} image(s) ready — optimize to produce ${formatSelect.value.split('/')[1].toUpperCase()} files.`;
-      }
-    }
-
-    // ---------- Drag & Drop ----------
-    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
-    dropZone.addEventListener('dragleave', e => { e.preventDefault(); dropZone.classList.remove('drag'); });
-    dropZone.addEventListener('drop', e => {
-      e.preventDefault();
-      dropZone.classList.remove('drag');
-      const items = Array.from(e.dataTransfer.files || []);
-      if(items.length) addLocalFiles(items);
-    });
-    dropZone.addEventListener('click', () => uploadInput.click());
-
-    // ---------- Local file input ----------
-    uploadInput.addEventListener('change', () => {
-      const files = Array.from(uploadInput.files || []);
-      if(files.length) addLocalFiles(files);
-      uploadInput.value = '';
-    });
-
-    function addLocalFiles(files){
-      clearError();
-      const imgs = files.filter(f => f && f.type && f.type.startsWith('image/'));
-      if(imgs.length === 0) return showError('No image files found in selection.');
-      imgs.forEach(f => allFiles.push(f));
-      renderPreviews();
-      updateInfoText();
-    }
-
-    // ---------- URL textarea / file (bulk) ----------
-    addUrlsBtn.addEventListener('click', async () => {
-      const raw = urlArea.value.trim();
-      if(!raw) return showError('Paste one or more image URLs (one per line).');
-      const urls = parseUrlText(raw);
-      urlArea.value = '';
-      await fetchAndAddUrls(urls);
-    });
-
-    urlFile.addEventListener('change', async () => {
-      const f = urlFile.files[0];
-      if(!f) return;
-      const text = await f.text();
-      const urls = parseUrlText(text);
-      urlFile.value = '';
-      await fetchAndAddUrls(urls);
-    });
-
-    function parseUrlText(text){
-      const arr = text.split(/\r?\n|,/).map(s => s.trim()).filter(Boolean);
-      return Array.from(new Set(arr));
-    }
-
-    // ---------- Fetch & add URLs (with status placeholders & retry) ----------
-    async function fetchAndAddUrls(urls){
-      clearError();
-      if(!urls.length) return;
-      
-      // Create placeholder entries
-      urls.forEach(url => {
-        fetchingMap.set(url, { status: 'pending', message: 'Waiting' });
-        addUrlStatusPreview(url);
-      });
-
-      // Fetch sequentially to avoid bursting
-      for(const url of urls){
-        try {
-          updateUrlStatus(url, 'fetching', 'Fetching...');
-          
-          // FIX 1: Add CORS proxy fallback for URLs that fail
-          let blob;
-          try {
-            // First try direct fetch
-            const resp = await fetch(url);
-            if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            blob = await resp.blob();
-            if(!blob.type.startsWith('image/')) throw new Error('Fetched resource is not an image.');
-          } catch (directError) {
-            console.warn('Direct fetch failed, trying with CORS proxy:', directError);
-            
-            // Try with CORS proxy if direct fetch fails
-            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
-            const proxyResp = await fetch(proxyUrl);
-            if(!proxyResp.ok) throw new Error(`CORS proxy failed: HTTP ${proxyResp.status}`);
-            blob = await proxyResp.blob();
-            if(!blob.type.startsWith('image/')) throw new Error('Fetched resource is not an image.');
-          }
-          
-          // Extract filename from URL or generate one
-          let filename;
-          try {
-            const urlObj = new URL(url);
-            const pathname = urlObj.pathname;
-            filename = pathname.split('/').pop() || 'image';
-            if (!filename.includes('.')) {
-              const ext = fileExtFromMime(blob.type);
-              filename = `${filename}.${ext}`;
-            }
-          } catch {
-            const ext = fileExtFromMime(blob.type);
-            filename = `image-${Date.now()}.${ext}`;
-          }
-          
-          const file = new File([blob], filename, { type: blob.type });
-          allFiles.push(file);
-          updateUrlStatus(url, 'done', 'Fetched ✓');
-          renderPreviews(); // re-render to include newly added file
-          updateInfoText();
-        } catch (err) {
-          console.warn('Fetch URL failed', url, err);
-          updateUrlStatus(url, 'error', String(err));
-          // leave placeholder so user can retry
-        }
-      }
-
-      // Summarize
-      const failed = Array.from(fetchingMap.entries()).filter(([u,s]) => s.status === 'error');
-      if(failed.length) {
-        showError(`${failed.length} URL(s) failed to fetch. Click 'Retry' on each failed item or use a CORS proxy if needed.`);
-      } else {
-        clearError();
-      }
-    }
-
-    // ---------- Status preview helpers ----------
-    function addUrlStatusPreview(url){
-      // if preview for same url exists, skip
-      if(previewContainer.querySelector(`.preview[data-url="${cssEscape(url)}"]`)) return;
-      const div = document.createElement('div');
-      div.className = 'preview';
-      div.dataset.url = url;
-      div.innerHTML = `
-        <div class="left"><div style="width:150px;height:90px;border-radius:8px;background:var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);">URL</div></div>
-        <div class="right">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <div style="max-width:70%;word-break:break-all;"><strong>${escapeHtml(url)}</strong></div>
-            <div class="meta">
-              <div class="tag status" id="status-${encodeURIComponent(url)}">Queued</div>
-              <button class="btn secondary" id="retry-${encodeURIComponent(url)}" style="display:none">Retry</button>
-            </div>
-          </div>
-          <div class="muted small" id="msg-${encodeURIComponent(url)}">Waiting to fetch…</div>
-        </div>
-      `;
-      // put URL placeholders at top
-      previewContainer.prepend(div);
-
-      // attach retry handler
-      setTimeout(() => {
-        const retryBtn = document.getElementById(`retry-${encodeURIComponent(url)}`);
-        if(retryBtn) retryBtn.addEventListener('click', async () => {
-          updateUrlStatus(url, 'fetching', 'Retrying...');
-          try {
-            let blob;
-            try {
-              const resp = await fetch(url);
-              if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
-              blob = await resp.blob();
-              if(!blob.type.startsWith('image/')) throw new Error('Not an image');
-            } catch {
-              const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
-              const proxyResp = await fetch(proxyUrl);
-              if(!proxyResp.ok) throw new Error(`CORS proxy failed: HTTP ${proxyResp.status}`);
-              blob = await proxyResp.blob();
-              if(!blob.type.startsWith('image/')) throw new Error('Not an image');
-            }
-            
-            let filename;
-            try {
-              const urlObj = new URL(url);
-              const pathname = urlObj.pathname;
-              filename = pathname.split('/').pop() || 'image';
-              if (!filename.includes('.')) {
-                const ext = fileExtFromMime(blob.type);
-                filename = `${filename}.${ext}`;
-              }
-            } catch {
-              const ext = fileExtFromMime(blob.type);
-              filename = `image-${Date.now()}.${ext}`;
-            }
-            
-            const file = new File([blob], filename, { type: blob.type });
-            allFiles.push(file);
-            updateUrlStatus(url, 'done', 'Fetched ✓');
-            renderPreviews();
-            updateInfoText();
-            clearError();
-          } catch (err) {
-            updateUrlStatus(url, 'error', String(err));
-            showError('Retry failed. Many servers block cross-origin fetches. Use a CORS-enabled URL or a proxy.');
-          }
-        });
-      }, 50);
-    }
-
-    function updateUrlStatus(url, status, message){
-      fetchingMap.set(url, { status, message });
-      const esc = encodeURIComponent(url);
-      const statusEl = document.getElementById(`status-${esc}`);
-      const msgEl = document.getElementById(`msg-${esc}`);
-      const retryBtn = document.getElementById(`retry-${esc}`);
-      if(statusEl) {
-        statusEl.textContent = status === 'done' ? 'Done' : (status === 'fetching' ? 'Fetching' : (status === 'error' ? 'Error' : status));
-        statusEl.className = status === 'error' ? 'tag status error' : 'tag status';
-      }
-      if(msgEl) msgEl.textContent = message || '';
-      if(retryBtn) retryBtn.style.display = status === 'error' ? 'inline-flex' : 'none';
-    }
-
-    // css escape util
-    function cssEscape(s) { return s.replace(/([^\w-])/g, m => '\\' + m); }
-
-    // ---------- Render previews for allFiles ----------
-    function renderPreviews(){
-      // Clear all previews that are file-based (keep URL status previews)
-      // We'll remove all existing file previews and recreate to keep indexes stable
-      // Remove any preview that doesn't have data-url attr (those are file previews)
-      const urlNodes = Array.from(previewContainer.querySelectorAll('.preview[data-url]'));
-      previewContainer.innerHTML = '';
-      // re-add URL nodes
-      urlNodes.forEach(nd => previewContainer.appendChild(nd));
-
-      allFiles.forEach((file, idx) => {
-        // prevent duplicate render if already exists (based on file.name + size)
-        if(previewContainer.querySelector(`.preview[data-file="${escapeHtml(file.name)}_${file.size}"]`)) return;
-
-        const div = document.createElement('div');
-        div.className = 'preview';
-        div.dataset.file = `${escapeHtml(file.name)}_${file.size}`;
-
-        const objectUrl = URL.createObjectURL(file);
-
-        div.innerHTML = `
-          <div class="left">
-            <img src="${objectUrl}" alt="${escapeHtml(file.name)}" />
-            <div class="muted small">${(file.size/1024).toFixed(1)} KB</div>
-          </div>
-          <div class="right">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <div style="max-width:70%;word-break:break-all;"><strong>${escapeHtml(file.name)}</strong></div>
-              <div class="meta">
-                <div class="tag">${escapeHtml(file.type || 'unknown')}</div>
-                <button class="btn secondary" data-remove="${escapeHtml(file.name)}_${file.size}">Remove</button>
-              </div>
-            </div>
-
-            <div style="display:flex;gap:12px;align-items:center;margin-top:8px;">
-              <div style="flex:1;">
-                <div class="small muted">Optimized preview</div>
-                <img id="optimg-${idx}" alt="optimized-${idx}" style="max-width:220px;margin-top:8px;border-radius:6px;border:1px solid var(--border);" />
-                <div class="muted small" id="optsz-${idx}" style="margin-top:6px"></div>
-              </div>
-
-              <div style="min-width:120px;display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
-                <a id="dl-${idx}" class="download-link" style="display:none" download>Download</a>
-                <div style="width:100%;display:flex;gap:6px;">
-                  <button class="btn" data-optimize-one="${idx}" style="flex:1">Optimize</button>
-                  <button class="btn secondary" data-preview="${idx}" style="flex:1">Open</button>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen transition-colors duration-300">
+    <div id="app" class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header -->
+        <header class="mb-10">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-6">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-bold gradient-text mb-2">Multiple Image Optimizer</h1>
+                    <p class="text-gray-600 dark:text-gray-400">Upload images, paste bulk URLs, convert/compress and download individually or as ZIP</p>
                 </div>
-              </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <span id="imageCount" class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm font-semibold px-3 py-1 rounded-full">0 images</span>
+                        <span id="optimizedCount" class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-sm font-semibold px-3 py-1 rounded-full hidden">0 optimized</span>
+                    </div>
+                    
+                    <button id="themeToggle" class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 p-3 rounded-full transition-colors duration-200">
+                        <i id="themeIcon" class="fas fa-moon"></i>
+                    </button>
+                </div>
             </div>
-          </div>
-        `;
-        previewContainer.appendChild(div);
+        </header>
 
-        // Attach remove handler
-        const removeBtn = div.querySelector(`[data-remove="${escapeHtml(file.name)}_${file.size}"]`);
-        if(removeBtn){
-          removeBtn.addEventListener('click', () => {
-            allFiles = allFiles.filter(f => !(f.name === file.name && f.size === file.size));
-            renderPreviews();
-            updateInfoText();
-          });
-        }
+        <!-- Main Content -->
+        <main>
+            <!-- Alert Container -->
+            <div id="alertContainer" class="mb-6"></div>
+            
+            <!-- Input Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+                <!-- URL Input Card -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg card-hover p-6">
+                    <h2 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fas fa-link mr-3 text-blue-500"></i> Add Image URLs
+                    </h2>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Paste image URLs (one per line)
+                        </label>
+                        <textarea 
+                            id="urlArea" 
+                            rows="6" 
+                            class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 resize-none"
+                            placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.png&#10;https://example.com/image3.jpeg"
+                        ></textarea>
+                        
+                        <div class="flex flex-wrap gap-3 mt-4">
+                            <button id="addUrlsBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-5 rounded-lg transition-colors duration-200 flex items-center">
+                                <i class="fas fa-plus mr-2"></i> Add URLs
+                            </button>
+                            
+                            <label class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium py-2.5 px-5 rounded-lg transition-colors duration-200 flex items-center cursor-pointer">
+                                <i class="fas fa-upload mr-2"></i> Upload URL List
+                                <input id="urlFile" type="file" accept=".txt,.csv" class="hidden">
+                            </label>
+                        </div>
+                        
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-4">
+                            <i class="fas fa-info-circle mr-1"></i> Some URLs may fail due to CORS restrictions. We'll try multiple methods to fetch them.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Upload & Settings Card -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg card-hover p-6">
+                    <h2 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fas fa-upload mr-3 text-green-500"></i> Upload & Settings
+                    </h2>
+                    
+                    <!-- Upload Area -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Upload Local Images
+                        </label>
+                        <div id="dropZone" class="file-upload-area p-8 text-center cursor-pointer">
+                            <div class="flex flex-col items-center justify-center">
+                                <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 dark:text-gray-500 mb-4"></i>
+                                <p class="font-medium text-gray-700 dark:text-gray-300 mb-1">Drag & drop images here</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">or click to browse</p>
+                                <label class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors duration-200 cursor-pointer">
+                                    Browse Files
+                                    <input id="upload" type="file" accept="image/*" multiple class="hidden">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Settings -->
+                    <div class="space-y-6">
+                        <!-- Format Selection -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Output Format
+                            </label>
+                            <div class="relative">
+                                <select id="format" class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 appearance-none">
+                                    <option value="image/webp">WebP (Best Compression)</option>
+                                    <option value="image/jpeg">JPEG (Balanced)</option>
+                                    <option value="image/png">PNG (Lossless)</option>
+                                    <option value="original">Keep Original Format</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+                                    <i class="fas fa-chevron-down text-gray-400"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Quality Slider -->
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Quality: <span id="qualityValue" class="font-bold text-blue-600 dark:text-blue-400">80%</span>
+                                </label>
+                                <span id="qualitySize" class="text-xs text-gray-500 dark:text-gray-400">Balanced</span>
+                            </div>
+                            <input id="quality" type="range" min="10" max="100" step="5" value="80" class="w-full">
+                            <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                <span>Smaller File</span>
+                                <span>Better Quality</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Optimization Options -->
+                        <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center justify-between mb-3">
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Resize Large Images
+                                </label>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="resizeToggle" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                            
+                            <div id="resizeOptions" class="space-y-3 hidden">
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="text-xs text-gray-600 dark:text-gray-400 mb-1 block">Max Width</label>
+                                        <input type="number" id="maxWidth" value="1920" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-600 dark:text-gray-400 mb-1 block">Max Height</label>
+                                        <input type="number" id="maxHeight" value="1080" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Optimize Button -->
+                        <button id="optimizeBtn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3.5 px-5 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-lg flex items-center justify-center">
+                            <i class="fas fa-magic mr-3"></i> Optimize All Images
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Results Section -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                <!-- Results Header -->
+                <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold flex items-center">
+                            <i class="fas fa-images mr-3 text-purple-500"></i> Images
+                            <span id="totalCount" class="ml-3 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm font-semibold px-3 py-1 rounded-full">0</span>
+                        </h2>
+                        <p id="infoText" class="text-sm text-gray-500 dark:text-gray-400 mt-1">No images loaded</p>
+                    </div>
+                    
+                    <div class="flex space-x-3">
+                        <button id="downloadAllBtn" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-5 rounded-lg transition-colors duration-200 flex items-center hidden">
+                            <i class="fas fa-file-archive mr-2"></i> Download ZIP
+                        </button>
+                        <button id="clearBtn" class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium py-2.5 px-5 rounded-lg transition-colors duration-200 flex items-center">
+                            <i class="fas fa-trash-alt mr-2"></i> Clear All
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Results Container -->
+                <div id="previewContainer" class="p-6">
+                    <!-- Empty State -->
+                    <div id="emptyState" class="text-center py-16">
+                        <div class="inline-block p-6 bg-gray-100 dark:bg-gray-700 rounded-full mb-6">
+                            <i class="fas fa-images text-4xl text-gray-400 dark:text-gray-500"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-700 dark:text-gray-300 mb-2">No Images Yet</h3>
+                        <p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-8">
+                            Upload images from your device or add image URLs to get started. You can optimize them in bulk and download individually or as a ZIP file.
+                        </p>
+                        <div class="flex flex-col sm:flex-row justify-center gap-4">
+                            <label class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-5 rounded-lg transition-colors duration-200 flex items-center justify-center cursor-pointer">
+                                <i class="fas fa-upload mr-2"></i> Upload Images
+                                <input id="uploadSecondary" type="file" accept="image/*" multiple class="hidden">
+                            </label>
+                            <button id="addUrlsSecondary" class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium py-2.5 px-5 rounded-lg transition-colors duration-200 flex items-center justify-center">
+                                <i class="fas fa-link mr-2"></i> Add URLs
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- URL Fetching Status Container -->
+                    <div id="urlStatusContainer" class="space-y-4 mb-6 hidden"></div>
+                    
+                    <!-- Image Previews Container -->
+                    <div id="imagePreviewsContainer" class="space-y-6"></div>
+                </div>
+            </div>
+        </main>
 
-        // Attach optimize single handler
-        const optOne = div.querySelector(`[data-optimize-one="${idx}"]`);
-        if(optOne){
-          optOne.addEventListener('click', async () => {
-            try {
-              optOne.disabled = true;
-              optOne.textContent = 'Optimizing…';
-              const outputFormat = formatSelect.value;
-              const quality = outputFormat === 'image/png' ? undefined : (qualityInput.value / 100);
-              const { blob, name } = await optimizeSingleFile(file, outputFormat, quality);
-              optimizedBlobs.push({ blob, name });
-              const optImg = document.getElementById(`optimg-${idx}`);
-              const optSz = document.getElementById(`optsz-${idx}`);
-              const dl = document.getElementById(`dl-${idx}`);
-              if(optImg) optImg.src = URL.createObjectURL(blob);
-              if(optSz) optSz.textContent = `${(blob.size/1024).toFixed(1)} KB • ${outputFormat.split('/')[1].toUpperCase()}`;
-              if(dl) { 
-                dl.href = URL.createObjectURL(blob); 
-                dl.download = name; 
-                dl.style.display = 'inline-block'; 
-                dl.textContent = 'Download'; 
-              }
-            } catch (err) {
-              console.warn('Single optimize error', err);
-              showError('Failed to optimize image. See console for details.');
-            } finally {
-              optOne.disabled = false;
-              optOne.textContent = 'Optimize';
-              if(optimizedBlobs.length > 0) downloadAllBtn.style.display = 'inline-block';
-            }
-          });
-        }
+        <!-- Footer -->
+        <footer class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="text-gray-600 dark:text-gray-400 text-sm">
+                    <p class="mb-1"><i class="fas fa-check-circle text-green-500 mr-2"></i> Optimized images keep original filenames</p>
+                    <p><i class="fas fa-shield-alt text-blue-500 mr-2"></i> All processing happens in your browser - no server upload</p>
+                </div>
+                
+                <div class="flex items-center space-x-6">
+                    <div class="tooltip">
+                        <button id="exportSettings" class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors duration-200">
+                            <i class="fas fa-cog text-lg"></i>
+                        </button>
+                        <span class="tooltip-text">Export settings as JSON for reuse</span>
+                    </div>
+                    
+                    <div class="tooltip">
+                        <button id="importSettings" class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors duration-200">
+                            <i class="fas fa-file-import text-lg"></i>
+                        </button>
+                        <span class="tooltip-text">Import settings from JSON</span>
+                    </div>
+                    
+                    <div class="tooltip">
+                        <a href="https://github.com" target="_blank" class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors duration-200">
+                            <i class="fab fa-github text-lg"></i>
+                        </a>
+                        <span class="tooltip-text">View on GitHub</span>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
 
-        // Attach open preview (in new tab)
-        const previewBtn = div.querySelector(`[data-preview="${idx}"]`);
-        if(previewBtn){
-          previewBtn.addEventListener('click', () => {
-            window.open(objectUrl, '_blank');
-          });
-        }
-      });
-    }
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
-    // ---------- Optimize all ----------
-    optimizeBtn.addEventListener('click', () => optimizeAll());
-    async function optimizeAll(){
-      clearError();
-      if(allFiles.length === 0) return showError('No images loaded to optimize.');
-      optimizeBtn.disabled = true;
-      optimizeBtn.textContent = 'Optimizing…';
-      optimizedBlobs = [];
-      downloadAllBtn.style.display = 'none';
-      const outputFormat = formatSelect.value;
-      const quality = outputFormat === 'image/png' ? undefined : (qualityInput.value / 100);
-
-      // process sequentially
-      for(let i=0;i<allFiles.length;i++){
-        const file = allFiles[i];
-        try {
-          const { blob, name } = await optimizeSingleFile(file, outputFormat, quality);
-          optimizedBlobs.push({ blob, name });
-
-          // update UI for that index (find position by file.name + size)
-          const node = previewContainer.querySelector(`.preview[data-file="${escapeHtml(file.name)}_${file.size}"]`);
-          if(node){
-            // find index in current render order
-            const index = Array.from(previewContainer.querySelectorAll('.preview')).indexOf(node);
-            const optImg = node.querySelector(`#optimg-${index}`);
-            const optSz = node.querySelector(`#optsz-${index}`);
-            const dl = node.querySelector(`#dl-${index}`);
-            if(optImg) optImg.src = URL.createObjectURL(blob);
-            if(optSz) optSz.textContent = `${(blob.size/1024).toFixed(1)} KB • ${outputFormat.split('/')[1].toUpperCase()}`;
-            if(dl) { 
-              dl.href = URL.createObjectURL(blob); 
-              dl.download = name; 
-              dl.style.display = 'inline-block'; 
-              dl.textContent = 'Download'; 
-            }
-          }
-        } catch (err) {
-          console.warn('Optimize error', allFiles[i].name, err);
-          // continue processing others
-        }
-      }
-
-      if(optimizedBlobs.length > 0) {
-        downloadAllBtn.style.display = 'inline-block';
-      } else {
-        showError('No images were successfully optimized.');
-      }
-
-      optimizeBtn.disabled = false;
-      optimizeBtn.textContent = 'Optimize Images';
-    }
-
-    // ---------- Optimize single file helper ----------
-    function optimizeSingleFile(file, outputFormat, quality){
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        const objectUrl = URL.createObjectURL(file);
+    <script>
+    (function() {
+        'use strict';
         
-        // Allow loading images from different origins
-        img.crossOrigin = 'anonymous';
+        // ---------- State Management ----------
+        const state = {
+            allFiles: [], // Array of File objects
+            optimizedBlobs: [], // Array of {blob, filename, originalSize, optimizedSize}
+            urlStatuses: new Map(), // Map of URL -> {status, message}
+            isDarkMode: localStorage.getItem('imgopt_darkmode') === 'true' || 
+                       (!('imgopt_darkmode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches),
+            isOptimizing: false,
+            batchSize: 3
+        };
         
-        img.onload = () => {
-          try {
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0);
-
-            // FIX 2: Use original filename with new extension
-            const optimizedName = getOptimizedFileName(file.name, outputFormat);
-
-            if(canvas.toBlob){
-              try {
-                canvas.toBlob((blob) => {
-                  if(!blob) {
-                    // fallback to toDataURL
-                    try {
-                      const dataUrl = canvas.toDataURL(outputFormat, quality);
-                      const fallback = dataURLToBlob(dataUrl);
-                      URL.revokeObjectURL(objectUrl);
-                      resolve({ blob: fallback, name: optimizedName });
-                    } catch (e) {
-                      URL.revokeObjectURL(objectUrl);
-                      reject(e);
-                    }
-                    return;
-                  }
-                  
-                  if(outputFormat && blob.type !== outputFormat){
-                    try {
-                      const dataUrl = canvas.toDataURL(outputFormat, quality);
-                      const converted = dataURLToBlob(dataUrl);
-                      URL.revokeObjectURL(objectUrl);
-                      resolve({ blob: converted, name: optimizedName });
-                    } catch (e){
-                      const name = getOptimizedFileName(file.name, blob.type);
-                      URL.revokeObjectURL(objectUrl);
-                      resolve({ blob, name });
-                    }
-                  } else {
-                    URL.revokeObjectURL(objectUrl);
-                    resolve({ blob, name: optimizedName });
-                  }
-                }, outputFormat, quality);
-              } catch (err) {
-                try {
-                  const dataUrl = canvas.toDataURL(outputFormat, quality);
-                  const blob = dataURLToBlob(dataUrl);
-                  URL.revokeObjectURL(objectUrl);
-                  resolve({ blob, name: optimizedName });
-                } catch(e){
-                  URL.revokeObjectURL(objectUrl);
-                  reject(e);
-                }
-              }
+        // ---------- DOM Elements ----------
+        const elements = {
+            app: document.getElementById('app'),
+            themeToggle: document.getElementById('themeToggle'),
+            themeIcon: document.getElementById('themeIcon'),
+            urlArea: document.getElementById('urlArea'),
+            addUrlsBtn: document.getElementById('addUrlsBtn'),
+            urlFile: document.getElementById('urlFile'),
+            upload: document.getElementById('upload'),
+            uploadSecondary: document.getElementById('uploadSecondary'),
+            dropZone: document.getElementById('dropZone'),
+            previewContainer: document.getElementById('previewContainer'),
+            imagePreviewsContainer: document.getElementById('imagePreviewsContainer'),
+            urlStatusContainer: document.getElementById('urlStatusContainer'),
+            optimizeBtn: document.getElementById('optimizeBtn'),
+            formatSelect: document.getElementById('format'),
+            qualityInput: document.getElementById('quality'),
+            qualityValue: document.getElementById('qualityValue'),
+            qualitySize: document.getElementById('qualitySize'),
+            downloadAllBtn: document.getElementById('downloadAllBtn'),
+            clearBtn: document.getElementById('clearBtn'),
+            imageCount: document.getElementById('imageCount'),
+            optimizedCount: document.getElementById('optimizedCount'),
+            totalCount: document.getElementById('totalCount'),
+            infoText: document.getElementById('infoText'),
+            emptyState: document.getElementById('emptyState'),
+            alertContainer: document.getElementById('alertContainer'),
+            addUrlsSecondary: document.getElementById('addUrlsSecondary'),
+            exportSettings: document.getElementById('exportSettings'),
+            importSettings: document.getElementById('importSettings'),
+            resizeToggle: document.getElementById('resizeToggle'),
+            resizeOptions: document.getElementById('resizeOptions'),
+            maxWidth: document.getElementById('maxWidth'),
+            maxHeight: document.getElementById('maxHeight')
+        };
+        
+        // ---------- Theme Management ----------
+        function initTheme() {
+            if (state.isDarkMode) {
+                document.documentElement.classList.add('dark');
+                elements.themeIcon.className = 'fas fa-sun';
             } else {
-              try {
-                const dataUrl = canvas.toDataURL(outputFormat, quality);
-                const blob = dataURLToBlob(dataUrl);
-                URL.revokeObjectURL(objectUrl);
-                resolve({ blob, name: optimizedName });
-              } catch(e){
-                URL.revokeObjectURL(objectUrl);
-                reject(e);
-              }
+                document.documentElement.classList.remove('dark');
+                elements.themeIcon.className = 'fas fa-moon';
             }
-          } catch (err) {
-            URL.revokeObjectURL(objectUrl);
-            reject(err);
-          }
+            
+            localStorage.setItem('imgopt_darkmode', state.isDarkMode);
+        }
+        
+        elements.themeToggle.addEventListener('click', () => {
+            state.isDarkMode = !state.isDarkMode;
+            initTheme();
+        });
+        
+        // ---------- Resize Toggle ----------
+        elements.resizeToggle.addEventListener('change', function() {
+            if (this.checked) {
+                elements.resizeOptions.classList.remove('hidden');
+            } else {
+                elements.resizeOptions.classList.add('hidden');
+            }
+        });
+        
+        // ---------- Alert System ----------
+        function showAlert(message, type = 'info', duration = 5000) {
+            const alertTypes = {
+                success: { icon: 'fa-check-circle', bg: 'bg-green-100 dark:bg-green-900', text: 'text-green-800 dark:text-green-200', border: 'border-green-300 dark:border-green-700' },
+                error: { icon: 'fa-exclamation-circle', bg: 'bg-red-100 dark:bg-red-900', text: 'text-red-800 dark:text-red-200', border: 'border-red-300 dark:border-red-700' },
+                warning: { icon: 'fa-exclamation-triangle', bg: 'bg-yellow-100 dark:bg-yellow-900', text: 'text-yellow-800 dark:text-yellow-200', border: 'border-yellow-300 dark:border-yellow-700' },
+                info: { icon: 'fa-info-circle', bg: 'bg-blue-100 dark:bg-blue-900', text: 'text-blue-800 dark:text-blue-200', border: 'border-blue-300 dark:border-blue-700' }
+            };
+            
+            const alertConfig = alertTypes[type] || alertTypes.info;
+            const alertId = 'alert-' + Date.now();
+            
+            const alertEl = document.createElement('div');
+            alertEl.id = alertId;
+            alertEl.className = `${alertConfig.bg} ${alertConfig.text} ${alertConfig.border} border-l-4 px-4 py-3 mb-4 rounded-r-lg flex items-start animate-fadeIn`;
+            alertEl.innerHTML = `
+                <i class="fas ${alertConfig.icon} mr-3 mt-0.5"></i>
+                <div class="flex-1">${message}</div>
+                <button onclick="document.getElementById('${alertId}').remove()" class="ml-4 text-${type}-600 hover:text-${type}-800">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            // Remove any existing alerts
+            const existingAlerts = elements.alertContainer.querySelectorAll('div');
+            if (existingAlerts.length >= 3) {
+                existingAlerts[0].remove();
+            }
+            
+            elements.alertContainer.appendChild(alertEl);
+            
+            // Auto-remove after duration
+            if (duration > 0) {
+                setTimeout(() => {
+                    const alertToRemove = document.getElementById(alertId);
+                    if (alertToRemove) {
+                        alertToRemove.style.opacity = '0';
+                        alertToRemove.style.transform = 'translateX(20px)';
+                        setTimeout(() => alertToRemove.remove(), 300);
+                    }
+                }, duration);
+            }
+        }
+        
+        // ---------- Quality Slider ----------
+        function updateQualityLabel() {
+            const quality = elements.qualityInput.value;
+            elements.qualityValue.textContent = `${quality}%`;
+            
+            let sizeLabel = '';
+            if (quality <= 30) sizeLabel = 'Very Small';
+            else if (quality <= 50) sizeLabel = 'Small';
+            else if (quality <= 70) sizeLabel = 'Medium';
+            else if (quality <= 85) sizeLabel = 'Balanced';
+            else sizeLabel = 'High Quality';
+            
+            elements.qualitySize.textContent = sizeLabel;
+        }
+        
+        elements.qualityInput.addEventListener('input', updateQualityLabel);
+        updateQualityLabel(); // Initialize
+        
+        // ---------- File Handling ----------
+        function handleFileSelect(files) {
+            const imageFiles = Array.from(files).filter(file => 
+                file.type.startsWith('image/')
+            );
+            
+            if (imageFiles.length === 0) {
+                showAlert('No image files found in the selected files', 'warning');
+                return;
+            }
+            
+            // Add files to state
+            state.allFiles.push(...imageFiles);
+            
+            // Show success message
+            const suffix = imageFiles.length === 1 ? '' : 's';
+            showAlert(`Added ${imageFiles.length} image${suffix}`, 'success');
+            
+            // Update UI
+            updateUI();
+        }
+        
+        // File input event listeners
+        elements.upload.addEventListener('change', (e) => {
+            handleFileSelect(e.target.files);
+            e.target.value = ''; // Reset input
+        });
+        
+        elements.uploadSecondary.addEventListener('change', (e) => {
+            handleFileSelect(e.target.files);
+            e.target.value = ''; // Reset input
+        });
+        
+        // ---------- Drag and Drop ----------
+        elements.dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            elements.dropZone.classList.add('drag-over');
+        });
+        
+        elements.dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            elements.dropZone.classList.remove('drag-over');
+        });
+        
+        elements.dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            elements.dropZone.classList.remove('drag-over');
+            
+            if (e.dataTransfer.files.length > 0) {
+                handleFileSelect(e.dataTransfer.files);
+            }
+        });
+        
+        elements.dropZone.addEventListener('click', () => {
+            elements.upload.click();
+        });
+        
+        // ---------- URL Processing ----------
+        async function processURLs() {
+            const text = elements.urlArea.value.trim();
+            if (!text) {
+                showAlert('Please paste some image URLs first', 'warning');
+                return;
+            }
+            
+            // Parse URLs
+            const urls = text.split(/\r?\n|,/)
+                .map(url => url.trim())
+                .filter(url => url.length > 0 && (url.startsWith('http://') || url.startsWith('https://')));
+            
+            if (urls.length === 0) {
+                showAlert('No valid URLs found. URLs must start with http:// or https://', 'error');
+                return;
+            }
+            
+            // Clear textarea
+            elements.urlArea.value = '';
+            
+            // Disable button and show loading
+            elements.addUrlsBtn.disabled = true;
+            elements.addUrlsBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processing...';
+            
+            // Show URL status container
+            elements.urlStatusContainer.classList.remove('hidden');
+            
+            // Process URLs
+            const uniqueUrls = [...new Set(urls)];
+            let successCount = 0;
+            
+            for (const url of uniqueUrls) {
+                try {
+                    // Add URL status
+                    addUrlStatus(url, 'pending', 'Waiting to fetch...');
+                    
+                    // Try to fetch the image
+                    const file = await fetchImageFromURL(url);
+                    
+                    if (file) {
+                        state.allFiles.push(file);
+                        updateUrlStatus(url, 'success', `Fetched: ${file.name}`);
+                        successCount++;
+                        
+                        // Update UI after each successful fetch
+                        updateUI();
+                    } else {
+                        updateUrlStatus(url, 'error', 'Failed to fetch image');
+                    }
+                    
+                } catch (error) {
+                    console.error('Error fetching URL:', url, error);
+                    updateUrlStatus(url, 'error', error.message || 'Unknown error');
+                }
+                
+                // Small delay to avoid rate limiting
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            // Re-enable button
+            elements.addUrlsBtn.disabled = false;
+            elements.addUrlsBtn.innerHTML = '<i class="fas fa-plus mr-2"></i> Add URLs';
+            
+            // Show summary
+            if (successCount > 0) {
+                showAlert(`Successfully fetched ${successCount} of ${uniqueUrls.length} image(s)`, 'success');
+            } else {
+                showAlert('No images could be fetched from the provided URLs', 'error');
+            }
+            
+            // Hide URL status container if no URLs are pending
+            if (state.urlStatuses.size === 0) {
+                elements.urlStatusContainer.classList.add('hidden');
+            }
+        }
+        
+        // Helper function to fetch image from URL with multiple fallbacks
+        async function fetchImageFromURL(url) {
+            try {
+                // Try with CORS proxy first (most reliable)
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+                const response = await fetch(proxyUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const blob = await response.blob();
+                
+                // Verify it's an image
+                if (!blob.type.startsWith('image/')) {
+                    throw new Error('Fetched resource is not an image');
+                }
+                
+                // Extract filename from URL or generate one
+                let filename;
+                try {
+                    const urlObj = new URL(url);
+                    const pathname = urlObj.pathname;
+                    filename = pathname.split('/').pop();
+                    
+                    // If no filename or no extension, generate one
+                    if (!filename || !filename.includes('.')) {
+                        const ext = blob.type.split('/')[1] || 'jpg';
+                        filename = `image-${Date.now()}.${ext}`;
+                    }
+                } catch (e) {
+                    const ext = blob.type.split('/')[1] || 'jpg';
+                    filename = `image-${Date.now()}.${ext}`;
+                }
+                
+                // Create file from blob
+                return new File([blob], filename, { type: blob.type });
+                
+            } catch (error) {
+                console.error('Proxy fetch failed, trying direct fetch:', error);
+                
+                // Fallback to direct fetch with no-cors
+                try {
+                    const response = await fetch(url, { mode: 'no-cors' });
+                    const blob = await response.blob();
+                    
+                    if (!blob.type.startsWith('image/')) {
+                        throw new Error('Fetched resource is not an image');
+                    }
+                    
+                    const ext = blob.type.split('/')[1] || 'jpg';
+                    const filename = `image-${Date.now()}.${ext}`;
+                    
+                    return new File([blob], filename, { type: blob.type });
+                    
+                } catch (directError) {
+                    console.error('Direct fetch also failed:', directError);
+                    throw new Error('Failed to fetch image from URL');
+                }
+            }
+        }
+        
+        // URL status management
+        function addUrlStatus(url, status, message) {
+            state.urlStatuses.set(url, { status, message });
+            renderUrlStatus(url);
+        }
+        
+        function updateUrlStatus(url, status, message) {
+            const existing = state.urlStatuses.get(url);
+            if (existing) {
+                existing.status = status;
+                existing.message = message;
+                renderUrlStatus(url);
+            }
+        }
+        
+        function renderUrlStatus(url) {
+            const status = state.urlStatuses.get(url);
+            if (!status) return;
+            
+            const statusId = `url-status-${encodeURIComponent(url)}`;
+            let statusEl = document.getElementById(statusId);
+            
+            const statusConfig = {
+                pending: { icon: 'fa-clock', color: 'text-yellow-500', bg: 'bg-yellow-50 dark:bg-yellow-900/20' },
+                fetching: { icon: 'fa-spinner fa-spin', color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+                success: { icon: 'fa-check', color: 'text-green-500', bg: 'bg-green-50 dark:bg-green-900/20' },
+                error: { icon: 'fa-times', color: 'text-red-500', bg: 'bg-red-50 dark:bg-red-900/20' }
+            };
+            
+            const config = statusConfig[status.status] || statusConfig.pending;
+            
+            if (!statusEl) {
+                statusEl = document.createElement('div');
+                statusEl.id = statusId;
+                statusEl.className = `${config.bg} rounded-lg p-4 animate-fadeIn`;
+                elements.urlStatusContainer.appendChild(statusEl);
+            }
+            
+            statusEl.className = `${config.bg} rounded-lg p-4`;
+            
+            statusEl.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas ${config.icon} ${config.color} text-lg"></i>
+                        <div>
+                            <div class="font-medium text-gray-800 dark:text-gray-200 truncate max-w-md">${url}</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">${status.message}</div>
+                        </div>
+                    </div>
+                    ${status.status === 'error' ? `
+                        <button onclick="app.retryUrl('${encodeURIComponent(url)}')" class="text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-3 py-1 rounded transition-colors duration-200">
+                            Retry
+                        </button>
+                    ` : ''}
+                </div>
+            `;
+        }
+        
+        // Expose retry function globally
+        window.app = window.app || {};
+        window.app.retryUrl = async function(urlEncoded) {
+            const url = decodeURIComponent(urlEncoded);
+            
+            try {
+                updateUrlStatus(url, 'fetching', 'Retrying...');
+                const file = await fetchImageFromURL(url);
+                
+                if (file) {
+                    state.allFiles.push(file);
+                    updateUrlStatus(url, 'success', `Fetched: ${file.name}`);
+                    updateUI();
+                    showAlert('Image fetched successfully', 'success');
+                } else {
+                    updateUrlStatus(url, 'error', 'Failed to fetch image');
+                }
+            } catch (error) {
+                updateUrlStatus(url, 'error', error.message || 'Unknown error');
+                showAlert('Failed to fetch image: ' + error.message, 'error');
+            }
         };
-        img.onerror = (ev) => {
-          URL.revokeObjectURL(objectUrl);
-          reject(new Error('Failed to load image into canvas (CORS or corrupt file).'));
+        
+        // URL button event listeners
+        elements.addUrlsBtn.addEventListener('click', processURLs);
+        elements.addUrlsSecondary.addEventListener('click', () => {
+            elements.urlArea.focus();
+            showAlert('Paste your URLs in the text area above', 'info');
+        });
+        
+        elements.urlFile.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            try {
+                const text = await file.text();
+                elements.urlArea.value = text;
+                await processURLs();
+            } catch (error) {
+                showAlert('Failed to read URL file', 'error');
+            }
+            
+            e.target.value = ''; // Reset input
+        });
+        
+        // ---------- Image Optimization ----------
+        async function optimizeAllImages() {
+            if (state.allFiles.length === 0) {
+                showAlert('No images to optimize. Please add images first.', 'warning');
+                return;
+            }
+            
+            if (state.isOptimizing) {
+                showAlert('Optimization already in progress', 'warning');
+                return;
+            }
+            
+            state.isOptimizing = true;
+            state.optimizedBlobs = [];
+            
+            // Update button state
+            elements.optimizeBtn.disabled = true;
+            elements.optimizeBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Optimizing...';
+            
+            // Show progress
+            showAlert(`Optimizing ${state.allFiles.length} images...`, 'info', 0);
+            
+            // Get settings
+            const outputFormat = elements.formatSelect.value;
+            const quality = elements.qualityInput.value / 100;
+            const shouldResize = elements.resizeToggle.checked;
+            const maxWidth = parseInt(elements.maxWidth.value) || 1920;
+            const maxHeight = parseInt(elements.maxHeight.value) || 1080;
+            
+            // Process images in batches to avoid freezing
+            const batchSize = state.batchSize;
+            let processedCount = 0;
+            let successCount = 0;
+            let totalOriginalSize = 0;
+            let totalOptimizedSize = 0;
+            
+            for (let i = 0; i < state.allFiles.length; i += batchSize) {
+                const batch = state.allFiles.slice(i, i + batchSize);
+                const batchPromises = batch.map((file, batchIndex) => 
+                    optimizeSingleFile(file, outputFormat, quality, shouldResize, maxWidth, maxHeight, i + batchIndex)
+                );
+                
+                try {
+                    const batchResults = await Promise.all(batchPromises);
+                    
+                    // Add successful results
+                    batchResults.forEach((result, batchIndex) => {
+                        if (result) {
+                            state.optimizedBlobs[i + batchIndex] = result;
+                            successCount++;
+                            totalOriginalSize += result.originalSize;
+                            totalOptimizedSize += result.optimizedSize;
+                            
+                            // Update UI for this image
+                            updateImagePreview(i + batchIndex, result);
+                        }
+                    });
+                    
+                    processedCount += batch.length;
+                    
+                    // Update progress
+                    updateOptimizationProgress(processedCount, state.allFiles.length);
+                    
+                } catch (error) {
+                    console.error('Batch optimization error:', error);
+                }
+                
+                // Small delay between batches
+                if (i + batchSize < state.allFiles.length) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+            }
+            
+            // Reset button state
+            elements.optimizeBtn.disabled = false;
+            elements.optimizeBtn.innerHTML = '<i class="fas fa-magic mr-2"></i> Optimize All Images';
+            
+            // Show download button if we have optimized images
+            if (successCount > 0) {
+                elements.downloadAllBtn.classList.remove('hidden');
+                elements.optimizedCount.classList.remove('hidden');
+                elements.optimizedCount.textContent = `${successCount} optimized`;
+                
+                // Calculate total savings
+                const totalSavings = totalOriginalSize - totalOptimizedSize;
+                const savingsPercent = ((totalSavings / totalOriginalSize) * 100).toFixed(1);
+                
+                if (totalSavings > 0) {
+                    showAlert(
+                        `Optimized ${successCount} images. Saved ${formatFileSize(totalSavings)} (${savingsPercent}%)`,
+                        'success'
+                    );
+                } else if (totalSavings < 0) {
+                    showAlert(
+                        `Optimized ${successCount} images. File size increased by ${formatFileSize(-totalSavings)}`,
+                        'warning'
+                    );
+                } else {
+                    showAlert(
+                        `Optimized ${successCount} images. File sizes unchanged.`,
+                        'info'
+                    );
+                }
+            } else {
+                showAlert('No images were successfully optimized', 'error');
+            }
+            
+            state.isOptimizing = false;
+            
+            // Clear progress alert
+            setTimeout(() => {
+                const alerts = elements.alertContainer.querySelectorAll('div');
+                alerts.forEach(alert => {
+                    if (alert.textContent.includes('Optimizing')) {
+                        alert.remove();
+                    }
+                });
+            }, 1000);
+        }
+        
+        // Update progress during optimization
+        function updateOptimizationProgress(current, total) {
+            const alerts = elements.alertContainer.querySelectorAll('div');
+            alerts.forEach(alert => {
+                if (alert.textContent.includes('Optimizing')) {
+                    const progressEl = alert.querySelector('.progress') || document.createElement('div');
+                    if (!progressEl.classList.contains('progress')) {
+                        progressEl.className = 'progress mt-2 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden';
+                        alert.querySelector('div').appendChild(progressEl);
+                        
+                        const progressBar = document.createElement('div');
+                        progressBar.className = 'h-full bg-blue-500 rounded-full';
+                        progressEl.appendChild(progressBar);
+                    }
+                    
+                    const percent = Math.round((current / total) * 100);
+                    const progressBar = alert.querySelector('.progress div');
+                    progressBar.style.width = `${percent}%`;
+                    progressBar.style.transition = 'width 0.3s ease';
+                    
+                    // Update text
+                    const textEl = alert.querySelector('div div');
+                    if (textEl) {
+                        textEl.textContent = `Optimizing ${current} of ${total} images (${percent}%)`;
+                    }
+                }
+            });
+        }
+        
+        // Optimize single file with proper compression
+        async function optimizeSingleFile(file, outputFormat, quality, shouldResize, maxWidth, maxHeight, index) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                const objectUrl = URL.createObjectURL(file);
+                
+                img.onload = function() {
+                    try {
+                        // Calculate new dimensions if resizing is enabled
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        if (shouldResize && (width > maxWidth || height > maxHeight)) {
+                            const scale = Math.min(maxWidth / width, maxHeight / height);
+                            width = Math.floor(width * scale);
+                            height = Math.floor(height * scale);
+                        }
+                        
+                        // Create canvas with optimal dimensions
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Set canvas rendering quality
+                        ctx.imageSmoothingEnabled = true;
+                        ctx.imageSmoothingQuality = 'high';
+                        
+                        // For JPEG output, fill background with white
+                        if (outputFormat === 'image/jpeg' || outputFormat === 'image/webp') {
+                            ctx.fillStyle = '#FFFFFF';
+                            ctx.fillRect(0, 0, width, height);
+                        }
+                        
+                        // Draw image with proper scaling
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Determine output format
+                        let finalFormat = outputFormat;
+                        if (outputFormat === 'original') {
+                            finalFormat = file.type;
+                        }
+                        
+                        // For PNG, use default quality (lossless)
+                        // For JPEG and WebP, use specified quality
+                        let qualityToUse = quality;
+                        if (finalFormat === 'image/png') {
+                            qualityToUse = 1.0; // PNG is lossless
+                        }
+                        
+                        // Convert to blob with proper settings
+                        canvas.toBlob(
+                            (blob) => {
+                                URL.revokeObjectURL(objectUrl);
+                                
+                                if (!blob) {
+                                    reject(new Error('Failed to create optimized blob'));
+                                    return;
+                                }
+                                
+                                // Preserve original filename with new extension
+                                const originalName = file.name.replace(/\.[^/.]+$/, '');
+                                let extension;
+                                
+                                if (outputFormat === 'original') {
+                                    extension = file.name.split('.').pop();
+                                } else {
+                                    extension = finalFormat.split('/')[1];
+                                }
+                                
+                                const newFilename = `${originalName}.${extension}`;
+                                
+                                resolve({
+                                    blob: blob,
+                                    filename: newFilename,
+                                    originalSize: file.size,
+                                    optimizedSize: blob.size,
+                                    format: finalFormat,
+                                    originalWidth: img.width,
+                                    originalHeight: img.height,
+                                    optimizedWidth: width,
+                                    optimizedHeight: height
+                                });
+                            },
+                            finalFormat,
+                            qualityToUse
+                        );
+                    } catch (error) {
+                        URL.revokeObjectURL(objectUrl);
+                        reject(error);
+                    }
+                };
+                
+                img.onerror = function() {
+                    URL.revokeObjectURL(objectUrl);
+                    reject(new Error('Failed to load image'));
+                };
+                
+                img.src = objectUrl;
+            });
+        }
+        
+        // Update image preview with optimization results
+        function updateImagePreview(index, optimizationResult) {
+            const previewEl = document.querySelector(`[data-file-index="${index}"]`);
+            if (!previewEl) return;
+            
+            // Update optimization status
+            const statusEl = previewEl.querySelector('.optimization-status');
+            if (statusEl) {
+                const savings = ((optimizationResult.originalSize - optimizationResult.optimizedSize) / optimizationResult.originalSize * 100).toFixed(1);
+                if (savings > 0) {
+                    statusEl.className = 'optimization-status bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs font-semibold px-2.5 py-1 rounded-full flex items-center';
+                    statusEl.innerHTML = `<i class="fas fa-arrow-down mr-1.5"></i> -${savings}%`;
+                } else if (savings < 0) {
+                    statusEl.className = 'optimization-status bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 text-xs font-semibold px-2.5 py-1 rounded-full flex items-center';
+                    statusEl.innerHTML = `<i class="fas fa-arrow-up mr-1.5"></i> +${Math.abs(savings)}%`;
+                } else {
+                    statusEl.className = 'optimization-status bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-semibold px-2.5 py-1 rounded-full flex items-center';
+                    statusEl.innerHTML = `<i class="fas fa-equals mr-1.5"></i> 0%`;
+                }
+            }
+            
+            // Add optimization info
+            const optimizationInfo = previewEl.querySelector('.optimization-info');
+            if (!optimizationInfo) {
+                const savings = ((optimizationResult.originalSize - optimizationResult.optimizedSize) / optimizationResult.originalSize * 100).toFixed(1);
+                const isResized = optimizationResult.originalWidth !== optimizationResult.optimizedWidth || 
+                                optimizationResult.originalHeight !== optimizationResult.optimizedHeight;
+                
+                const infoHtml = `
+                    <div class="optimization-info mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <div class="flex items-center space-x-4">
+                                <div class="text-center">
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">Original</div>
+                                    <div class="font-bold text-gray-700 dark:text-gray-300">${formatFileSize(optimizationResult.originalSize)}</div>
+                                    ${isResized ? `<div class="text-xs text-gray-500 dark:text-gray-400">${optimizationResult.originalWidth}×${optimizationResult.originalHeight}</div>` : ''}
+                                </div>
+                                <div class="text-gray-400 dark:text-gray-600">
+                                    <i class="fas fa-arrow-right"></i>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">Optimized</div>
+                                    <div class="font-bold ${savings > 0 ? 'text-green-600 dark:text-green-400' : savings < 0 ? 'text-yellow-600 dark:text-yellow-400' : 'text-blue-600 dark:text-blue-400'}">
+                                        ${formatFileSize(optimizationResult.optimizedSize)}
+                                    </div>
+                                    ${isResized ? `<div class="text-xs text-gray-500 dark:text-gray-400">${optimizationResult.optimizedWidth}×${optimizationResult.optimizedHeight}</div>` : ''}
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">${savings > 0 ? 'Savings' : 'Change'}</div>
+                                    <div class="font-bold ${savings > 0 ? 'text-green-600 dark:text-green-400' : savings < 0 ? 'text-yellow-600 dark:text-yellow-400' : 'text-blue-600 dark:text-blue-400'}">
+                                        ${savings > 0 ? '-' : ''}${Math.abs(savings)}%
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <a href="${URL.createObjectURL(optimizationResult.blob)}" 
+                               download="${optimizationResult.filename}"
+                               class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center">
+                                <i class="fas fa-download mr-2"></i> Download
+                            </a>
+                        </div>
+                    </div>
+                `;
+                
+                const actionsEl = previewEl.querySelector('.file-actions');
+                if (actionsEl) {
+                    actionsEl.insertAdjacentHTML('beforebegin', infoHtml);
+                }
+            }
+        }
+        
+        // Format file size for display
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Optimize button event listener
+        elements.optimizeBtn.addEventListener('click', optimizeAllImages);
+        
+        // ---------- Download All as ZIP ----------
+        async function downloadAllAsZip() {
+            if (state.optimizedBlobs.length === 0) {
+                showAlert('No optimized images to download. Please optimize images first.', 'warning');
+                return;
+            }
+            
+            // Filter out undefined entries
+            const validBlobs = state.optimizedBlobs.filter(blob => blob);
+            
+            if (validBlobs.length === 0) {
+                showAlert('No valid optimized images found', 'error');
+                return;
+            }
+            
+            elements.downloadAllBtn.disabled = true;
+            elements.downloadAllBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Creating ZIP...';
+            
+            try {
+                const zip = new JSZip();
+                
+                // Add all optimized images to ZIP
+                validBlobs.forEach(item => {
+                    zip.file(item.filename, item.blob);
+                });
+                
+                // Generate ZIP file
+                const content = await zip.generateAsync({ type: 'blob' });
+                
+                // Save ZIP file
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+                saveAs(content, `optimized-images-${timestamp}.zip`);
+                
+                showAlert(`ZIP file created with ${validBlobs.length} images`, 'success');
+                
+            } catch (error) {
+                console.error('Error creating ZIP:', error);
+                showAlert('Failed to create ZIP file', 'error');
+            } finally {
+                elements.downloadAllBtn.disabled = false;
+                elements.downloadAllBtn.innerHTML = '<i class="fas fa-file-archive mr-2"></i> Download ZIP';
+            }
+        }
+        
+        elements.downloadAllBtn.addEventListener('click', downloadAllAsZip);
+        
+        // ---------- Clear All ----------
+        function clearAll() {
+            if (state.allFiles.length === 0 && state.urlStatuses.size === 0) {
+                showAlert('Nothing to clear', 'info');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to clear all images and results?')) {
+                // Clear state
+                state.allFiles = [];
+                state.optimizedBlobs = [];
+                state.urlStatuses.clear();
+                
+                // Clear URL statuses
+                elements.urlStatusContainer.innerHTML = '';
+                elements.urlStatusContainer.classList.add('hidden');
+                
+                // Revoke object URLs to free memory
+                document.querySelectorAll('img[src^="blob:"]').forEach(img => {
+                    URL.revokeObjectURL(img.src);
+                });
+                
+                // Update UI
+                updateUI();
+                
+                // Hide download button
+                elements.downloadAllBtn.classList.add('hidden');
+                elements.optimizedCount.classList.add('hidden');
+                
+                showAlert('All images and results cleared', 'success');
+            }
+        }
+        
+        elements.clearBtn.addEventListener('click', clearAll);
+        
+        // ---------- UI Updates ----------
+        function updateUI() {
+            const totalImages = state.allFiles.length;
+            
+            // Update counters
+            elements.imageCount.textContent = `${totalImages} image${totalImages !== 1 ? 's' : ''}`;
+            elements.totalCount.textContent = totalImages;
+            
+            // Update info text
+            if (totalImages === 0) {
+                elements.infoText.textContent = 'No images loaded';
+                elements.emptyState.classList.remove('hidden');
+                elements.imagePreviewsContainer.innerHTML = '';
+            } else {
+                elements.infoText.textContent = `${totalImages} image${totalImages !== 1 ? 's' : ''} ready for optimization`;
+                elements.emptyState.classList.add('hidden');
+                renderImagePreviews();
+            }
+            
+            // Update optimized count if needed
+            const optimizedCount = state.optimizedBlobs.filter(b => b).length;
+            if (optimizedCount > 0) {
+                elements.optimizedCount.classList.remove('hidden');
+                elements.optimizedCount.textContent = `${optimizedCount} optimized`;
+            }
+        }
+        
+        function renderImagePreviews() {
+            elements.imagePreviewsContainer.innerHTML = '';
+            
+            state.allFiles.forEach((file, index) => {
+                const objectUrl = URL.createObjectURL(file);
+                const optimizationResult = state.optimizedBlobs[index];
+                
+                const previewEl = document.createElement('div');
+                previewEl.className = 'bg-gray-50 dark:bg-gray-800/50 rounded-xl p-5 card-hover animate-fadeIn';
+                previewEl.dataset.fileIndex = index;
+                
+                previewEl.innerHTML = `
+                    <div class="flex flex-col md:flex-row gap-5">
+                        <!-- Image Preview -->
+                        <div class="md:w-1/4">
+                            <div class="img-hover-zoom bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
+                                <img src="${objectUrl}" alt="${file.name}" class="w-full h-48 object-cover">
+                            </div>
+                            <div class="mt-3 text-center text-sm text-gray-600 dark:text-gray-400">
+                                ${formatFileSize(file.size)}
+                            </div>
+                        </div>
+                        
+                        <!-- File Info & Actions -->
+                        <div class="md:w-3/4">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                                <div>
+                                    <h3 class="font-bold text-gray-800 dark:text-gray-200 truncate">${file.name}</h3>
+                                    <div class="flex items-center space-x-3 mt-2">
+                                        <span class="text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-2.5 py-1 rounded">
+                                            ${file.type || 'Unknown'}
+                                        </span>
+                                        <span class="optimization-status text-xs ${optimizationResult ? 
+                                            (optimizationResult.originalSize > optimizationResult.optimizedSize ? 
+                                                'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : 
+                                                optimizationResult.originalSize < optimizationResult.optimizedSize ? 
+                                                'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
+                                                'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200') : 
+                                            'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200'} px-2.5 py-1 rounded flex items-center">
+                                            ${optimizationResult ? 
+                                                (optimizationResult.originalSize > optimizationResult.optimizedSize ? 
+                                                    '<i class="fas fa-arrow-down mr-1.5"></i> Optimized' : 
+                                                    optimizationResult.originalSize < optimizationResult.optimizedSize ? 
+                                                    '<i class="fas fa-arrow-up mr-1.5"></i> Larger' :
+                                                    '<i class="fas fa-equals mr-1.5"></i> Same') : 
+                                                '<i class="fas fa-clock mr-1.5"></i> Pending'
+                                            }
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex space-x-2">
+                                    <button onclick="app.removeImage(${index})" class="text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                    <a href="${objectUrl}" target="_blank" class="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
+                                        <i class="fas fa-external-link-alt"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            ${optimizationResult ? `
+                                <div class="optimization-info mt-3 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                                    <div class="flex flex-wrap items-center justify-between gap-3">
+                                        <div class="flex items-center space-x-4">
+                                            <div class="text-center">
+                                                <div class="text-sm text-gray-500 dark:text-gray-400">Original</div>
+                                                <div class="font-bold text-gray-700 dark:text-gray-300">${formatFileSize(optimizationResult.originalSize)}</div>
+                                                ${optimizationResult.originalWidth !== optimizationResult.optimizedWidth || optimizationResult.originalHeight !== optimizationResult.optimizedHeight ? 
+                                                    `<div class="text-xs text-gray-500 dark:text-gray-400">${optimizationResult.originalWidth}×${optimizationResult.originalHeight}</div>` : ''}
+                                            </div>
+                                            <div class="text-gray-400 dark:text-gray-600">
+                                                <i class="fas fa-arrow-right"></i>
+                                            </div>
+                                            <div class="text-center">
+                                                <div class="text-sm text-gray-500 dark:text-gray-400">Optimized</div>
+                                                <div class="font-bold ${optimizationResult.originalSize > optimizationResult.optimizedSize ? 'text-green-600 dark:text-green-400' : optimizationResult.originalSize < optimizationResult.optimizedSize ? 'text-yellow-600 dark:text-yellow-400' : 'text-blue-600 dark:text-blue-400'}">
+                                                    ${formatFileSize(optimizationResult.optimizedSize)}
+                                                </div>
+                                                ${optimizationResult.originalWidth !== optimizationResult.optimizedWidth || optimizationResult.originalHeight !== optimizationResult.optimizedHeight ? 
+                                                    `<div class="text-xs text-gray-500 dark:text-gray-400">${optimizationResult.optimizedWidth}×${optimizationResult.optimizedHeight}</div>` : ''}
+                                            </div>
+                                            <div class="text-center">
+                                                <div class="text-sm text-gray-500 dark:text-gray-400">${optimizationResult.originalSize > optimizationResult.optimizedSize ? 'Savings' : 'Change'}</div>
+                                                <div class="font-bold ${optimizationResult.originalSize > optimizationResult.optimizedSize ? 'text-green-600 dark:text-green-400' : optimizationResult.originalSize < optimizationResult.optimizedSize ? 'text-yellow-600 dark:text-yellow-400' : 'text-blue-600 dark:text-blue-400'}">
+                                                    ${optimizationResult.originalSize > optimizationResult.optimizedSize ? '-' : ''}${Math.abs(((optimizationResult.originalSize - optimizationResult.optimizedSize) / optimizationResult.originalSize * 100).toFixed(1))}%
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <a href="${URL.createObjectURL(optimizationResult.blob)}" 
+                                           download="${optimizationResult.filename}"
+                                           class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center">
+                                            <i class="fas fa-download mr-2"></i> Download
+                                        </a>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
+                            <div class="file-actions mt-4 flex space-x-3">
+                                <button onclick="app.optimizeSingle(${index})" class="text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center">
+                                    <i class="fas fa-magic mr-2"></i> Optimize
+                                </button>
+                                <a href="${objectUrl}" download="${file.name}" class="text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center">
+                                    <i class="fas fa-download mr-2"></i> Download Original
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                elements.imagePreviewsContainer.appendChild(previewEl);
+            });
+        }
+        
+        // Expose helper functions globally
+        window.app.removeImage = function(index) {
+            if (index >= 0 && index < state.allFiles.length) {
+                // Revoke object URL to free memory
+                const previewEl = document.querySelector(`[data-file-index="${index}"]`);
+                if (previewEl) {
+                    const img = previewEl.querySelector('img');
+                    if (img && img.src.startsWith('blob:')) {
+                        URL.revokeObjectURL(img.src);
+                    }
+                }
+                
+                // Remove from arrays
+                state.allFiles.splice(index, 1);
+                state.optimizedBlobs.splice(index, 1);
+                
+                // Update UI
+                updateUI();
+                
+                showAlert('Image removed', 'success');
+            }
         };
-        img.src = objectUrl;
-      });
-    }
-
-    // ---------- dataURL -> Blob ----------
-    function dataURLToBlob(dataURL){
-      const parts = dataURL.split(',');
-      const mime = parts[0].match(/:(.*?);/)[1];
-      const binary = atob(parts[1]);
-      const array = new Uint8Array(binary.length);
-      for(let i=0;i<binary.length;i++) array[i] = binary.charCodeAt(i);
-      return new Blob([array], { type: mime });
-    }
-
-    // ---------- Download all as ZIP ----------
-    downloadAllBtn.addEventListener('click', async () => {
-      if(optimizedBlobs.length === 0) return showError('No optimized images available to download. Optimize images first.');
-      downloadAllBtn.disabled = true;
-      downloadAllBtn.textContent = 'Preparing ZIP…';
-      try {
-        const zip = new JSZip();
-        optimizedBlobs.forEach(item => zip.file(item.name, item.blob));
-        const content = await zip.generateAsync({ type: 'blob' });
-        saveAs(content, 'optimized_images.zip');
-      } catch (err) {
-        console.error(err);
-        showError('Failed to create ZIP file.');
-      } finally {
-        downloadAllBtn.disabled = false;
-        downloadAllBtn.textContent = 'Download All as ZIP';
-      }
-    });
-
-    // ---------- Clear ----------
-    clearBtn.addEventListener('click', () => {
-      if(!confirm('Clear all loaded images and previews?')) return;
-      allFiles = [];
-      optimizedBlobs = [];
-      fetchingMap.clear();
-      previewContainer.innerHTML = '';
-      clearError();
-      downloadAllBtn.style.display = 'none';
-      updateInfoText();
-    });
-
-    // ---------- Helper: convert fetched blobs to Files (not strictly necessary but keeps uniform) ----------
-    function blobToFile(blob, filename){
-      try { return new File([blob], filename, { type: blob.type }); }
-      catch(e){
-        // older browsers
-        blob.name = filename;
-        blob.lastModified = Date.now();
-        return blob;
-      }
-    }
-
-    // ---------- CSS-safe encode ----------
-    function encodeForId(s){
-      return encodeURIComponent(s).replace(/%/g,'_');
-    }
-
-    // ---------- bootstrap: expose fetch via console if needed ----------
-    window.__imgopt = { allFiles, optimizedBlobs };
-
-    // ---------- initial state ----------
-    updateInfoText();
-
-    // ---------- Notes in console ----------
-    console.info('Multiple Image Optimizer loaded. Note: remote URL fetches may fail due to CORS; use CORS-enabled URLs or proxy if needed.');
-  })();
-  </script>
+        
+        window.app.optimizeSingle = async function(index) {
+            if (index < 0 || index >= state.allFiles.length) return;
+            
+            const file = state.allFiles[index];
+            const outputFormat = elements.formatSelect.value;
+            const quality = elements.qualityInput.value / 100;
+            const shouldResize = elements.resizeToggle.checked;
+            const maxWidth = parseInt(elements.maxWidth.value) || 1920;
+            const maxHeight = parseInt(elements.maxHeight.value) || 1080;
+            
+            try {
+                // Update button state
+                const button = document.querySelector(`[data-file-index="${index}"] button[onclick*="optimizeSingle"]`);
+                if (button) {
+                    button.disabled = true;
+                    button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Optimizing';
+                }
+                
+                const result = await optimizeSingleFile(file, outputFormat, quality, shouldResize, maxWidth, maxHeight, index);
+                
+                // Store result
+                state.optimizedBlobs[index] = result;
+                
+                // Update UI
+                updateImagePreview(index, result);
+                
+                // Show optimized count
+                const optimizedCount = state.optimizedBlobs.filter(b => b).length;
+                elements.optimizedCount.classList.remove('hidden');
+                elements.optimizedCount.textContent = `${optimizedCount} optimized`;
+                
+                // Show download button if we have optimized images
+                if (optimizedCount > 0) {
+                    elements.downloadAllBtn.classList.remove('hidden');
+                }
+                
+                const savings = ((result.originalSize - result.optimizedSize) / result.originalSize * 100).toFixed(1);
+                if (savings > 0) {
+                    showAlert(`"${file.name}" optimized successfully. Saved ${savings}%`, 'success');
+                } else if (savings < 0) {
+                    showAlert(`"${file.name}" optimized. File size increased by ${Math.abs(savings)}%`, 'warning');
+                } else {
+                    showAlert(`"${file.name}" optimized. File size unchanged.`, 'info');
+                }
+                
+            } catch (error) {
+                console.error('Single optimization error:', error);
+                showAlert(`Failed to optimize "${file.name}"`, 'error');
+                
+                // Reset button
+                const button = document.querySelector(`[data-file-index="${index}"] button[onclick*="optimizeSingle"]`);
+                if (button) {
+                    button.disabled = false;
+                    button.innerHTML = '<i class="fas fa-magic mr-2"></i> Optimize';
+                }
+            }
+        };
+        
+        // ---------- Settings Import/Export ----------
+        elements.exportSettings.addEventListener('click', () => {
+            const settings = {
+                format: elements.formatSelect.value,
+                quality: elements.qualityInput.value,
+                resize: elements.resizeToggle.checked,
+                maxWidth: elements.maxWidth.value,
+                maxHeight: elements.maxHeight.value,
+                timestamp: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(settings, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            saveAs(dataBlob, `image-optimizer-settings-${new Date().toISOString().slice(0, 10)}.json`);
+            
+            showAlert('Settings exported successfully', 'success');
+        });
+        
+        elements.importSettings.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const settings = JSON.parse(event.target.result);
+                        
+                        if (settings.format) {
+                            elements.formatSelect.value = settings.format;
+                        }
+                        
+                        if (settings.quality) {
+                            elements.qualityInput.value = settings.quality;
+                            updateQualityLabel();
+                        }
+                        
+                        if (settings.resize !== undefined) {
+                            elements.resizeToggle.checked = settings.resize;
+                            if (settings.resize) {
+                                elements.resizeOptions.classList.remove('hidden');
+                            }
+                        }
+                        
+                        if (settings.maxWidth) {
+                            elements.maxWidth.value = settings.maxWidth;
+                        }
+                        
+                        if (settings.maxHeight) {
+                            elements.maxHeight.value = settings.maxHeight;
+                        }
+                        
+                        showAlert('Settings imported successfully', 'success');
+                    } catch (error) {
+                        showAlert('Failed to import settings. Invalid file format.', 'error');
+                    }
+                };
+                
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        });
+        
+        // ---------- Initialize ----------
+        function init() {
+            // Initialize theme
+            initTheme();
+            
+            // Initialize UI
+            updateUI();
+            
+            // Show welcome message
+            setTimeout(() => {
+                showAlert('✨ Welcome to Image Optimizer! Upload images or add URLs to get started.', 'info', 8000);
+            }, 1000);
+        }
+        
+        // Start the application
+        init();
+        
+    })();
+    </script>
 </body>
 </html>
