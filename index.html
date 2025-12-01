@@ -3,860 +3,333 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Multiple Image Optimizer — Upload + Bulk URLs</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<title>Multiple Image Optimizer — Upload + Bulk URLs (Light/Dark)</title>
+<!-- Add Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  /* ---------- CSS Reset & Base ---------- */
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  /* ---------- Fonts & reset ---------- */
+  @font-face {
+    font-family: "InterVar";
+    src: local("Inter"), local("Inter var");
   }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html,body { height: 100%; }
 
+  /* ---------- Improved dark theme with Tailwind ---------- */
   :root {
-    /* Light theme */
-    --color-bg: #f8fafc;
-    --color-surface: #ffffff;
-    --color-surface-2: #f1f5f9;
-    --color-text: #0f172a;
-    --color-text-muted: #64748b;
-    --color-border: #e2e8f0;
-    --color-primary: #3b82f6;
-    --color-primary-light: #60a5fa;
-    --color-success: #10b981;
-    --color-warning: #f59e0b;
-    --color-error: #ef4444;
-    --color-shadow: rgba(15, 23, 42, 0.1);
-    --radius-lg: 16px;
-    --radius-md: 12px;
-    --radius-sm: 8px;
-    --transition: all 0.2s ease;
+    --bg: #f5f7fb;
+    --card: #ffffff;
+    --muted: #6b7280;
+    --text: #111827;
+    --accent: #115e59;
+    --accent-2: #10b981;
+    --danger: #dc2626;
+    --border: #e6e9ef;
+    --shadow: 0 6px 18px rgba(16,24,40,0.06);
+    --glass: rgba(255,255,255,0.6);
   }
-
   [data-theme="dark"] {
-    /* Dark theme */
-    --color-bg: #0f172a;
-    --color-surface: #1e293b;
-    --color-surface-2: #334155;
-    --color-text: #f1f5f9;
-    --color-text-muted: #94a3b8;
-    --color-border: #475569;
-    --color-primary: #60a5fa;
-    --color-primary-light: #93c5fd;
-    --color-success: #34d399;
-    --color-warning: #fbbf24;
-    --color-error: #f87171;
-    --color-shadow: rgba(0, 0, 0, 0.3);
-  }
-
-  html {
-    height: 100%;
+    --bg: #0f172a;
+    --card: #1e293b;
+    --muted: #94a3b8;
+    --text: #f1f5f9;
+    --accent: #22c55e;
+    --accent-2: #10b981;
+    --danger: #ef4444;
+    --border: #334155;
+    --shadow: 0 6px 20px rgba(0,0,0,0.4);
+    --glass: rgba(30,41,59,0.6);
   }
 
   body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    background: var(--color-bg);
-    color: var(--color-text);
-    line-height: 1.6;
-    min-height: 100%;
-    transition: var(--transition);
-    padding: 20px;
+    background: linear-gradient(180deg,var(--bg), rgba(0,0,0,0.02));
+    color: var(--text);
+    font-family: InterVar, Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    max-width: 1100px;
+    margin: 28px auto;
+    padding: 22px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.45;
   }
 
-  #root {
-    max-width: 1400px;
-    margin: 0 auto;
-  }
-
-  /* ---------- Typography ---------- */
-  h1 {
-    font-size: 28px;
-    font-weight: 700;
-    line-height: 1.2;
-    background: linear-gradient(135deg, var(--color-primary), var(--color-success));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  h2 {
-    font-size: 20px;
-    font-weight: 600;
-    margin-bottom: 12px;
-  }
-
-  .subtitle {
-    color: var(--color-text-muted);
-    font-size: 15px;
-    margin-top: 4px;
-  }
-
-  .small {
-    font-size: 14px;
-    color: var(--color-text-muted);
-  }
-
-  .error {
-    color: var(--color-error);
-    font-weight: 500;
-  }
-
-  .success {
-    color: var(--color-success);
-  }
-
-  /* ---------- Layout Components ---------- */
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 32px;
-    flex-wrap: wrap;
-    gap: 20px;
-  }
-
-  .header-controls {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .main-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    margin-bottom: 32px;
-  }
-
-  @media (max-width: 1024px) {
-    .main-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  /* ---------- Cards ---------- */
-  .card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    padding: 24px;
-    box-shadow: 0 4px 20px var(--color-shadow);
-    transition: var(--transition);
-  }
-
-  .card:hover {
-    box-shadow: 0 6px 30px var(--color-shadow);
-  }
-
-  /* ---------- Form Controls ---------- */
-  textarea, 
-  input[type="text"], 
-  select {
-    width: 100%;
-    padding: 12px 16px;
-    background: var(--color-surface-2);
-    border: 2px solid var(--color-border);
-    border-radius: var(--radius-md);
-    color: var(--color-text);
-    font-family: inherit;
-    font-size: 14px;
-    transition: var(--transition);
-  }
-
-  textarea:focus,
-  input[type="text"]:focus,
-  select:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  }
-
-  textarea {
-    min-height: 140px;
-    resize: vertical;
-  }
-
-  /* ---------- Buttons ---------- */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 12px 20px;
-    border-radius: var(--radius-md);
-    font-size: 14px;
-    font-weight: 600;
-    border: none;
-    cursor: pointer;
-    transition: var(--transition);
-    white-space: nowrap;
-  }
-
-  .btn-primary {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
-    color: white;
-  }
-
-  .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
-  }
-
-  .btn-secondary {
-    background: var(--color-surface-2);
-    color: var(--color-text);
-    border: 1px solid var(--color-border);
-  }
-
-  .btn-secondary:hover {
-    background: var(--color-border);
-  }
-
-  .btn-ghost {
-    background: transparent;
-    color: var(--color-text-muted);
-    border: 1px dashed var(--color-border);
-  }
-
-  .btn-ghost:hover {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-  }
-
-  .btn-small {
-    padding: 8px 16px;
-    font-size: 13px;
-  }
-
-  .btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none !important;
-  }
-
-  /* ---------- Upload Area ---------- */
-  .upload-area {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .upload-buttons {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  /* ---------- Drop Zone ---------- */
-  .drop-zone {
-    border: 3px dashed var(--color-border);
-    border-radius: var(--radius-md);
-    padding: 40px 20px;
-    text-align: center;
-    background: var(--color-surface-2);
-    cursor: pointer;
-    transition: var(--transition);
-    margin-top: 16px;
-  }
-
-  .drop-zone:hover {
-    border-color: var(--color-primary);
-    background: rgba(59, 130, 246, 0.05);
-  }
-
-  .drop-zone.drag-over {
-    border-color: var(--color-primary);
-    background: rgba(59, 130, 246, 0.1);
-    transform: scale(1.02);
-  }
-
-  .drop-zone-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .drop-zone-icon {
-    font-size: 48px;
-    color: var(--color-primary);
-  }
+  /* ---------- Header ---------- */
+  header { display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px; }
+  h1 { font-size:1.25rem; font-weight:700; margin:0; }
+  .sub { color:var(--muted); font-size:0.9rem; }
 
   /* ---------- Controls ---------- */
-  .controls {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+  .card { 
+    background:var(--card); 
+    border:1px solid var(--border); 
+    border-radius:12px; 
+    padding:14px; 
+    box-shadow:var(--shadow);
+    backdrop-filter: blur(10px);
+  }
+  .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  .col { display:flex; flex-direction:column; gap:8px; }
+
+  textarea, input[type="text"], select {
+    background:transparent; 
+    border:1px solid var(--border); 
+    padding:10px 12px; 
+    border-radius:8px; 
+    color:var(--text);
+    min-width:0; 
+    outline:none;
+    transition: border-color 0.2s ease;
+  }
+  textarea:focus, input[type="text"]:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+  }
+  textarea { min-height:96px; resize:vertical; width:100%; }
+  .small { font-size:0.88rem; color:var(--muted); }
+
+  .btn {
+    display:inline-flex; 
+    align-items:center; 
+    gap:8px;
+    background:linear-gradient(180deg,var(--accent), var(--accent-2)); 
+    color:white; 
+    border:none; 
+    padding:10px 14px; 
+    border-radius:10px;
+    cursor:pointer; 
+    font-weight:600;
+    transition: all 0.2s ease;
+  }
+  .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  .btn.secondary { 
+    background:transparent; 
+    border:1px solid var(--border); 
+    color:var(--text);
+  }
+  .btn.ghost { 
+    background:transparent; 
+    border: 1px dashed var(--border); 
+    color:var(--muted);
   }
 
-  .control-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  .upload-label { 
+    cursor:pointer; 
+    padding:10px 12px; 
+    border-radius:8px; 
+    border:1px solid var(--border); 
+    color:var(--muted); 
+    background:var(--glass);
+    transition: all 0.2s ease;
+  }
+  .upload-label:hover {
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
-  .slider-container {
-    display: flex;
-    align-items: center;
-    gap: 16px;
+  /* ---------- Drop zone ---------- */
+  #dropZone { 
+    margin-top:12px; 
+    padding:20px; 
+    text-align:center; 
+    border-radius:10px; 
+    border:2px dashed var(--border); 
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent); 
+    cursor:pointer;
+    transition: all 0.3s ease;
+  }
+  #dropZone.drag { 
+    border-color:var(--accent); 
+    box-shadow: 0 8px 30px rgba(16,185,129,0.2);
+    background: rgba(34, 197, 94, 0.05);
   }
 
+  /* ---------- Options ---------- */
+  .controls-grid { display:flex; gap:12px; align-items:center; margin-top:12px; flex-wrap:wrap; }
+  select, input[type="range"] { padding:8px; }
   input[type="range"] {
-    flex: 1;
-    height: 6px;
     -webkit-appearance: none;
-    background: var(--color-border);
+    height: 6px;
+    background: var(--border);
     border-radius: 3px;
   }
-
   input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 20px;
-    height: 20px;
-    background: var(--color-primary);
+    width: 18px;
+    height: 18px;
+    background: var(--accent);
     border-radius: 50%;
     cursor: pointer;
-    border: 3px solid var(--color-surface);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   }
+  #qualityValue { font-weight:700; color:var(--accent); min-width:48px; text-align:center; }
 
-  .quality-value {
-    min-width: 60px;
-    text-align: center;
-    font-weight: 600;
-    color: var(--color-primary);
+  /* ---------- Preview list ---------- */
+  .preview-container { 
+    margin-top:18px; 
+    display:flex; 
+    flex-direction:column; 
+    gap:14px; 
   }
+  .preview { 
+    display:flex; 
+    gap:14px; 
+    padding:12px; 
+    border-radius:10px; 
+    align-items:flex-start; 
+    border:1px solid var(--border); 
+    background:linear-gradient(180deg, transparent, rgba(0,0,0,0.01));
+    transition: all 0.2s ease;
+  }
+  .preview:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow);
+  }
+  .preview .left { width:160px; flex-shrink:0; text-align:center; }
+  .preview .left img { width:150px; height:auto; border-radius:8px; display:block; margin:0 auto 8px; border:1px solid var(--border); }
+  .preview .right { flex:1; display:flex; flex-direction:column; gap:8px; }
+  .meta { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .tag { 
+    padding:6px 8px; 
+    border-radius:8px; 
+    background:var(--glass); 
+    color:var(--muted); 
+    font-size:0.85rem; 
+    border:1px solid var(--border);
+    backdrop-filter: blur(10px);
+  }
+  .status { font-weight:700; color:var(--muted); font-size:0.9rem; }
 
-  /* ---------- Preview List ---------- */
-  .preview-container {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+  .download-link { 
+    color:var(--accent); 
+    text-decoration:none; 
+    font-weight:600;
+    transition: color 0.2s ease;
   }
-
-  .preview-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
+  .download-link:hover {
+    color: var(--accent-2);
+    text-decoration: underline;
   }
-
-  .preview-count {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .count-badge {
-    background: var(--color-primary);
-    color: white;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 600;
-  }
-
-  /* ---------- Preview Items ---------- */
-  .preview-item {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    padding: 20px;
-    transition: var(--transition);
-    animation: slideIn 0.3s ease;
-  }
-
-  @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .preview-item:hover {
-    border-color: var(--color-primary);
-    box-shadow: 0 4px 15px var(--color-shadow);
-  }
-
-  .preview-grid {
-    display: grid;
-    grid-template-columns: 180px 1fr;
-    gap: 20px;
-    align-items: start;
-  }
-
-  @media (max-width: 768px) {
-    .preview-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .preview-image {
-    width: 100%;
-    height: 120px;
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-    background: var(--color-surface-2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .preview-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .preview-content {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .preview-header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 16px;
-  }
-
-  .file-info {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .file-name {
-    font-weight: 600;
-    margin-bottom: 4px;
-    word-break: break-all;
-  }
-
-  .file-meta {
-    display: flex;
-    gap: 12px;
-    color: var(--color-text-muted);
-    font-size: 14px;
-  }
-
-  .tag {
-    padding: 4px 10px;
-    background: var(--color-surface-2);
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-    font-weight: 500;
-  }
-
-  .status-badge {
-    padding: 6px 12px;
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .status-pending {
-    background: rgba(245, 158, 11, 0.1);
-    color: var(--color-warning);
-  }
-
-  .status-loading {
-    background: rgba(59, 130, 246, 0.1);
-    color: var(--color-primary);
-  }
-
-  .status-success {
-    background: rgba(16, 185, 129, 0.1);
-    color: var(--color-success);
-  }
-
-  .status-error {
-    background: rgba(239, 68, 68, 0.1);
-    color: var(--color-error);
-  }
-
-  /* ---------- Optimization Panel ---------- */
-  .optimization-panel {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 20px;
-    align-items: center;
-    margin-top: 16px;
-    padding: 16px;
-    background: var(--color-surface-2);
-    border-radius: var(--radius-md);
-  }
-
-  @media (max-width: 640px) {
-    .optimization-panel {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .optimization-info {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .optimization-stats {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-  }
-
-  .optimization-actions {
-    display: flex;
-    gap: 12px;
-  }
-
-  /* ---------- URL Status Items ---------- */
-  .url-status-item {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 16px;
-    background: var(--color-surface-2);
-    border-radius: var(--radius-md);
-    margin-bottom: 12px;
-  }
-
-  .url-status-icon {
-    font-size: 24px;
-  }
-
-  .url-status-content {
-    flex: 1;
-  }
-
-  .url-text {
-    font-family: monospace;
-    font-size: 13px;
-    word-break: break-all;
-    margin-bottom: 4px;
-  }
+  .error { color:var(--danger); font-weight:700; }
+  .muted { color:var(--muted); font-size:0.9rem; }
 
   /* ---------- Footer ---------- */
-  .footer {
-    margin-top: 32px;
-    padding-top: 24px;
-    border-top: 1px solid var(--color-border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 20px;
+  footer { 
+    margin-top:18px; 
+    display:flex; 
+    justify-content:space-between; 
+    align-items:center; 
+    gap:12px; 
+    flex-wrap:wrap; 
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .actions { display:flex; gap:10px; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:900px) {
+    .preview { flex-direction:column; align-items:center; text-align:center; }
+    .preview .left { width:100%; }
+    .preview .right { width:100%; }
+    header { flex-direction:column; align-items:flex-start; gap:8px; }
   }
 
-  .footer-info {
-    color: var(--color-text-muted);
-    font-size: 14px;
+  /* Dark mode improvements with Tailwind */
+  [data-theme="dark"] .card {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   }
-
-  .footer-actions {
-    display: flex;
-    gap: 12px;
+  [data-theme="dark"] .btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
   }
-
-  /* ---------- Utility Classes ---------- */
-  .hidden {
-    display: none !important;
-  }
-
-  .text-center {
-    text-align: center;
-  }
-
-  .mt-2 { margin-top: 8px; }
-  .mt-4 { margin-top: 16px; }
-  .mt-6 { margin-top: 24px; }
-  .mb-2 { margin-bottom: 8px; }
-  .mb-4 { margin-bottom: 16px; }
-  .gap-2 { gap: 8px; }
-  .gap-4 { gap: 16px; }
-
-  /* ---------- Loading Animation ---------- */
-  .spinner {
-    width: 16px;
-    height: 16px;
-    border: 2px solid transparent;
-    border-top-color: currentColor;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-
-  /* ---------- Progress Bar ---------- */
-  .progress-bar {
-    width: 100%;
-    height: 4px;
-    background: var(--color-border);
-    border-radius: 2px;
-    overflow: hidden;
-    margin-top: 8px;
-  }
-
-  .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--color-primary), var(--color-success));
-    transition: width 0.3s ease;
-  }
-
-  /* ---------- Empty States ---------- */
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--color-text-muted);
-  }
-
-  .empty-state-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
-    opacity: 0.5;
-  }
-
-  /* ---------- Theme Toggle ---------- */
-  .theme-toggle {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 16px;
-    background: var(--color-surface-2);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--color-border);
-    cursor: pointer;
-    transition: var(--transition);
-  }
-
-  .theme-toggle:hover {
-    background: var(--color-border);
-  }
-
-  .theme-icon {
-    font-size: 20px;
-  }
-
-  /* ---------- File Upload Label ---------- */
-  .file-upload-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    background: var(--color-surface-2);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: var(--transition);
-  }
-
-  .file-upload-label:hover {
-    background: var(--color-border);
-  }
-
-  .file-upload-label input {
-    display: none;
-  }
-
-  /* ---------- Alert ---------- */
-  .alert {
-    padding: 16px;
-    border-radius: var(--radius-md);
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .alert-error {
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid var(--color-error);
-    color: var(--color-error);
-  }
-
-  .alert-success {
-    background: rgba(16, 185, 129, 0.1);
-    border: 1px solid var(--color-success);
-    color: var(--color-success);
-  }
-
-  /* ---------- Modal ---------- */
-  .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 20px;
-  }
-
-  .modal {
-    background: var(--color-surface);
-    border-radius: var(--radius-lg);
-    padding: 32px;
-    max-width: 500px;
-    width: 100%;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  }
-
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-  }
-
-  .modal-close {
-    background: none;
-    border: none;
-    color: var(--color-text-muted);
-    cursor: pointer;
-    font-size: 24px;
-    padding: 0;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--radius-sm);
-  }
-
-  .modal-close:hover {
-    background: var(--color-surface-2);
+  [data-theme="dark"] .preview {
+    background: linear-gradient(135deg, rgba(30,41,59,0.7), rgba(15,23,42,0.7));
   }
 </style>
 </head>
 <body>
-  <div id="root" data-theme="dark">
-    <!-- Header -->
-    <header class="header">
+  <div id="root" class="page" data-theme="dark">
+    <header>
       <div>
         <h1>Multiple Image Optimizer</h1>
-        <div class="subtitle">Upload images, paste bulk URLs, convert/compress and download individually or as ZIP</div>
+        <div class="sub">Upload images, paste bulk URLs, convert/compress and download individually or as ZIP</div>
       </div>
-      
-      <div class="header-controls">
-        <div class="theme-toggle" id="themeToggle">
-          <span class="theme-icon">🌙</span>
-          <span id="themeLabel">Dark Mode</span>
-        </div>
+
+      <div class="row" style="align-items:center;">
+        <div class="small" id="themeLabel">Theme</div>
+        <button id="themeToggle" class="btn secondary">Toggle Theme</button>
       </div>
     </header>
 
-    <!-- Main Content -->
-    <div class="main-grid">
-      <!-- Left Column: URL Input -->
-      <div class="card">
-        <h2>Add Image URLs</h2>
-        <div class="upload-area">
-          <textarea 
-            id="urlArea" 
-            placeholder="Paste image URLs (one per line)&#10;Example:&#10;https://example.com/image1.jpg&#10;https://example.com/image2.png"
-            class="mb-4"
-          ></textarea>
-          
-          <div class="upload-buttons">
-            <button id="addUrlsBtn" class="btn btn-primary">
-              <span>Add URLs</span>
-            </button>
-            
-            <label class="file-upload-label">
-              <input type="file" id="urlFile" accept=".txt,.csv" hidden>
-              📄 Upload URL List
-            </label>
-          </div>
-        </div>
-      </div>
+    <!-- Main controls -->
+    <section class="card">
+      <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
+        <div style="flex:1;min-width:300px;">
+          <label class="small">Paste image URLs (one per line)</label>
+          <textarea id="urlArea" placeholder="https://example.com/a.jpg&#10;https://example.com/b.png"></textarea>
 
-      <!-- Right Column: Upload & Settings -->
-      <div class="card">
-        <h2>Upload & Settings</h2>
-        
-        <div class="controls">
-          <div class="control-group">
-            <label class="small">Upload Local Images</label>
-            <div class="drop-zone" id="dropZone">
-              <div class="drop-zone-content">
-                <div class="drop-zone-icon">📁</div>
-                <div>Drag & drop images here</div>
-                <div class="small">or click to browse</div>
+          <div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap;">
+            <button id="addUrlsBtn" class="btn">Add URLs</button>
+
+            <label class="upload-label" title="Upload .txt or .csv with URLs">
+              Upload URL list (.txt / .csv)
+              <input id="urlFile" type="file" accept=".txt,.csv" style="display:none">
+            </label>
+
+            <label class="upload-label" title="Choose local image files">
+              Choose Local Images
+              <input id="upload" type="file" accept="image/*" multiple style="display:none">
+            </label>
+
+            <div class="small muted">Tip: some URLs may fail to fetch due to remote CORS policies (see status)</div>
+          </div>
+
+        </div>
+
+        <div style="width:360px;min-width:260px;">
+          <div class="col">
+            <div class="small">Drag & drop images below (or click the area)</div>
+            <div id="dropZone">Drag & Drop Images Here — or click to open file picker</div>
+
+            <div class="controls-grid">
+              <div class="row" style="align-items:center;">
+                <label class="small" for="format">Output format</label>
+                <select id="format">
+                  <option value="image/webp">WebP (recommended)</option>
+                  <option value="image/jpeg">JPEG</option>
+                  <option value="image/png">PNG</option>
+                </select>
+              </div>
+
+              <div class="row" style="align-items:center;">
+                <label class="small" for="quality">Quality</label>
+                <input id="quality" type="range" min="10" max="100" step="5" value="80">
+                <div id="qualityValue" class="small">80%</div>
+              </div>
+
+              <div style="margin-left:auto;">
+                <button id="optimizeBtn" class="btn">Optimize Images</button>
               </div>
             </div>
-            <input type="file" id="upload" accept="image/*" multiple hidden>
-          </div>
 
-          <div class="control-group">
-            <label class="small">Output Format</label>
-            <select id="format">
-              <option value="image/webp">WebP (Recommended)</option>
-              <option value="image/jpeg">JPEG</option>
-              <option value="image/png">PNG</option>
-            </select>
           </div>
-
-          <div class="control-group">
-            <label class="small">Quality: <span id="qualityValue">80%</span></label>
-            <div class="slider-container">
-              <input type="range" id="quality" min="10" max="100" step="5" value="80">
-            </div>
-          </div>
-
-          <button id="optimizeBtn" class="btn btn-primary">
-            <span>✨ Optimize All Images</span>
-          </button>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Alert Container -->
-    <div id="alertContainer"></div>
+    <!-- Error / Info -->
+    <div id="error" style="margin-top:12px;display:none;"></div>
 
-    <!-- Preview Container -->
-    <div class="card">
-      <div class="preview-header">
-        <div class="preview-count">
-          <h2>Images</h2>
-          <span class="count-badge" id="imageCount">0</span>
-        </div>
-        <div class="small" id="infoText">No images loaded</div>
-      </div>
+    <!-- Preview list -->
+    <div class="preview-container card" id="previewContainer" style="margin-top:18px;"></div>
 
-      <div class="preview-container" id="previewContainer">
-        <!-- Images will be inserted here -->
-      </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="footer">
-      <div class="footer-info">
-        <div>Ready to download optimized images</div>
-        <div class="small mt-2">Images will be saved with original names</div>
-      </div>
-      
-      <div class="footer-actions">
-        <button id="downloadAllBtn" class="btn btn-ghost hidden">
-          📦 Download All as ZIP
-        </button>
-        <button id="clearBtn" class="btn btn-secondary">
-          🗑️ Clear All
-        </button>
+    <!-- Footer actions -->
+    <footer>
+      <div class="small muted" id="infoText">No images loaded.</div>
+      <div class="actions">
+        <button id="downloadAllBtn" class="btn ghost" style="display:none">Download All as ZIP</button>
+        <button id="clearBtn" class="btn secondary">Clear All</button>
       </div>
     </footer>
   </div>
@@ -867,13 +340,7 @@
 
   <script>
   (function(){
-    // ---------- State ----------
-    let allFiles = [];
-    let optimizedBlobs = [];
-    let urlStatuses = new Map();
-    let currentOptimization = null;
-
-    // ---------- DOM Elements ----------
+    // ---------- Elements ----------
     const root = document.getElementById('root');
     const themeToggle = document.getElementById('themeToggle');
     const themeLabel = document.getElementById('themeLabel');
@@ -889,592 +356,582 @@
     const qualityValue = document.getElementById('qualityValue');
     const downloadAllBtn = document.getElementById('downloadAllBtn');
     const clearBtn = document.getElementById('clearBtn');
-    const imageCount = document.getElementById('imageCount');
+    const errorEl = document.getElementById('error');
     const infoText = document.getElementById('infoText');
-    const alertContainer = document.getElementById('alertContainer');
 
-    // ---------- Theme Management ----------
-    function initTheme() {
-      const savedTheme = localStorage.getItem('imgopt_theme') || 'dark';
-      root.setAttribute('data-theme', savedTheme);
-      updateThemeUI(savedTheme);
-    }
+    // ---------- State ----------
+    let allFiles = []; // array of File objects
+    let optimizedBlobs = []; // {blob, name}
+    let fetchingMap = new Map(); // url -> status
 
-    function updateThemeUI(theme) {
-      const isDark = theme === 'dark';
-      themeLabel.textContent = isDark ? 'Dark Mode' : 'Light Mode';
-      themeToggle.querySelector('.theme-icon').textContent = isDark ? '🌙' : '☀️';
+    // ---------- Theme ----------
+    function applyTheme(theme){
+      root.setAttribute('data-theme', theme);
+      localStorage.setItem('imgopt_theme', theme);
+      themeToggle.textContent = theme === 'dark' ? 'Switch to Light' : 'Switch to Dark';
+      themeLabel.textContent = theme === 'dark' ? 'Dark Mode' : 'Light Mode';
     }
+    const savedTheme = localStorage.getItem('imgopt_theme') || 'dark';
+    applyTheme(savedTheme);
 
     themeToggle.addEventListener('click', () => {
-      const currentTheme = root.getAttribute('data-theme');
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      
-      root.setAttribute('data-theme', newTheme);
-      localStorage.setItem('imgopt_theme', newTheme);
-      updateThemeUI(newTheme);
+      const current = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+      applyTheme(current === 'dark' ? 'light' : 'dark');
     });
 
-    // ---------- Alert System ----------
-    function showAlert(message, type = 'error', duration = 5000) {
-      const alertEl = document.createElement('div');
-      alertEl.className = `alert alert-${type}`;
-      alertEl.innerHTML = `
-        ${type === 'error' ? '❌' : '✅'}
-        <div>${message}</div>
-      `;
-      
-      alertContainer.appendChild(alertEl);
-      
-      if (duration > 0) {
-        setTimeout(() => {
-          alertEl.style.opacity = '0';
-          setTimeout(() => alertEl.remove(), 300);
-        }, duration);
+    // ---------- Quality label ----------
+    qualityValue.textContent = qualityInput.value + '%';
+    qualityInput.addEventListener('input', () => qualityValue.textContent = qualityInput.value + '%');
+
+    // ---------- Utility helpers ----------
+    function showError(msg){
+      errorEl.style.display = 'block';
+      errorEl.innerHTML = '<div class="error">' + escapeHtml(msg) + '</div>';
+    }
+    function clearError(){ errorEl.style.display = 'none'; errorEl.innerHTML = ''; }
+
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    function fileExtFromMime(mime){ return (mime || 'image').split('/').pop().split('+')[0]; }
+    function getFileExtension(filename) {
+      return filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
+    }
+    
+    // FIX 2: Keep original filename with new extension
+    function getOptimizedFileName(originalName, outputFormat) {
+      const baseName = originalName.replace(/\.[^/.]+$/, "");
+      const ext = outputFormat.split('/')[1];
+      return `${baseName}.${ext}`;
+    }
+
+    function updateInfoText(){
+      if(allFiles.length === 0) {
+        infoText.textContent = 'No images loaded.';
+      } else {
+        infoText.textContent = `${allFiles.length} image(s) ready — optimize to produce ${formatSelect.value.split('/')[1].toUpperCase()} files.`;
       }
     }
 
-    // ---------- File Handling ----------
-    function handleFileSelect(files) {
-      const imageFiles = Array.from(files).filter(f => 
-        f.type.startsWith('image/')
-      );
-      
-      if (imageFiles.length === 0) {
-        showAlert('No image files found in selection');
-        return;
-      }
-      
-      allFiles.push(...imageFiles);
-      updateUI();
-      showAlert(`Added ${imageFiles.length} image(s)`, 'success');
+    // ---------- Drag & Drop ----------
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+    dropZone.addEventListener('dragleave', e => { e.preventDefault(); dropZone.classList.remove('drag'); });
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('drag');
+      const items = Array.from(e.dataTransfer.files || []);
+      if(items.length) addLocalFiles(items);
+    });
+    dropZone.addEventListener('click', () => uploadInput.click());
+
+    // ---------- Local file input ----------
+    uploadInput.addEventListener('change', () => {
+      const files = Array.from(uploadInput.files || []);
+      if(files.length) addLocalFiles(files);
+      uploadInput.value = '';
+    });
+
+    function addLocalFiles(files){
+      clearError();
+      const imgs = files.filter(f => f && f.type && f.type.startsWith('image/'));
+      if(imgs.length === 0) return showError('No image files found in selection.');
+      imgs.forEach(f => allFiles.push(f));
+      renderPreviews();
+      updateInfoText();
     }
 
-    // ---------- URL Processing ----------
-    async function processURLs() {
-      const text = urlArea.value.trim();
-      if (!text) {
-        showAlert('Please paste some URLs first');
-        return;
-      }
-
-      const urls = text.split(/\r?\n|,/).map(s => s.trim()).filter(Boolean);
-      if (urls.length === 0) {
-        showAlert('No valid URLs found');
-        return;
-      }
-
+    // ---------- URL textarea / file (bulk) ----------
+    addUrlsBtn.addEventListener('click', async () => {
+      const raw = urlArea.value.trim();
+      if(!raw) return showError('Paste one or more image URLs (one per line).');
+      const urls = parseUrlText(raw);
       urlArea.value = '';
-      addUrlsBtn.disabled = true;
-      addUrlsBtn.innerHTML = '<span class="spinner"></span> Processing...';
+      await fetchAndAddUrls(urls);
+    });
 
-      const uniqueUrls = [...new Set(urls)];
-      let successCount = 0;
-      let failCount = 0;
+    urlFile.addEventListener('change', async () => {
+      const f = urlFile.files[0];
+      if(!f) return;
+      const text = await f.text();
+      const urls = parseUrlText(text);
+      urlFile.value = '';
+      await fetchAndAddUrls(urls);
+    });
 
-      for (const url of uniqueUrls) {
+    function parseUrlText(text){
+      const arr = text.split(/\r?\n|,/).map(s => s.trim()).filter(Boolean);
+      return Array.from(new Set(arr));
+    }
+
+    // ---------- Fetch & add URLs (with status placeholders & retry) ----------
+    async function fetchAndAddUrls(urls){
+      clearError();
+      if(!urls.length) return;
+      
+      // Create placeholder entries
+      urls.forEach(url => {
+        fetchingMap.set(url, { status: 'pending', message: 'Waiting' });
+        addUrlStatusPreview(url);
+      });
+
+      // Fetch sequentially to avoid bursting
+      for(const url of urls){
         try {
-          addUrlStatus(url, 'pending', 'Waiting...');
+          updateUrlStatus(url, 'fetching', 'Fetching...');
           
-          const response = await fetch(url, { 
-            mode: 'cors',
-            headers: { 'User-Agent': 'Mozilla/5.0' }
-          });
+          // FIX 1: Add CORS proxy fallback for URLs that fail
+          let blob;
+          try {
+            // First try direct fetch
+            const resp = await fetch(url);
+            if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            blob = await resp.blob();
+            if(!blob.type.startsWith('image/')) throw new Error('Fetched resource is not an image.');
+          } catch (directError) {
+            console.warn('Direct fetch failed, trying with CORS proxy:', directError);
+            
+            // Try with CORS proxy if direct fetch fails
+            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+            const proxyResp = await fetch(proxyUrl);
+            if(!proxyResp.ok) throw new Error(`CORS proxy failed: HTTP ${proxyResp.status}`);
+            blob = await proxyResp.blob();
+            if(!blob.type.startsWith('image/')) throw new Error('Fetched resource is not an image.');
+          }
           
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          // Extract filename from URL or generate one
+          let filename;
+          try {
+            const urlObj = new URL(url);
+            const pathname = urlObj.pathname;
+            filename = pathname.split('/').pop() || 'image';
+            if (!filename.includes('.')) {
+              const ext = fileExtFromMime(blob.type);
+              filename = `${filename}.${ext}`;
+            }
+          } catch {
+            const ext = fileExtFromMime(blob.type);
+            filename = `image-${Date.now()}.${ext}`;
+          }
           
-          const blob = await response.blob();
-          if (!blob.type.startsWith('image/')) throw new Error('Not an image');
-          
-          const filename = extractFilenameFromURL(url) || `image-${Date.now()}.${blob.type.split('/')[1]}`;
           const file = new File([blob], filename, { type: blob.type });
-          
           allFiles.push(file);
-          updateUrlStatus(url, 'success', 'Downloaded successfully');
-          successCount++;
-          
-        } catch (error) {
-          console.warn('Failed to fetch URL:', url, error);
-          updateUrlStatus(url, 'error', error.message);
-          failCount++;
+          updateUrlStatus(url, 'done', 'Fetched ✓');
+          renderPreviews(); // re-render to include newly added file
+          updateInfoText();
+        } catch (err) {
+          console.warn('Fetch URL failed', url, err);
+          updateUrlStatus(url, 'error', String(err));
+          // leave placeholder so user can retry
         }
       }
 
-      updateUI();
-      addUrlsBtn.disabled = false;
-      addUrlsBtn.textContent = 'Add URLs';
-
-      if (successCount > 0) {
-        showAlert(`Successfully added ${successCount} image(s)${failCount > 0 ? `, ${failCount} failed` : ''}`, 
-                 failCount > 0 ? 'error' : 'success');
+      // Summarize
+      const failed = Array.from(fetchingMap.entries()).filter(([u,s]) => s.status === 'error');
+      if(failed.length) {
+        showError(`${failed.length} URL(s) failed to fetch. Click 'Retry' on each failed item or use a CORS proxy if needed.`);
+      } else {
+        clearError();
       }
     }
 
-    function extractFilenameFromURL(url) {
-      try {
-        const urlObj = new URL(url);
-        const pathname = urlObj.pathname;
-        const filename = pathname.split('/').pop();
-        return filename || null;
-      } catch {
-        return null;
-      }
-    }
-
-    // ---------- URL Status Management ----------
-    function addUrlStatus(url, status, message) {
-      urlStatuses.set(url, { status, message });
-      renderUrlStatus(url);
-    }
-
-    function updateUrlStatus(url, status, message) {
-      const existing = urlStatuses.get(url);
-      if (existing) {
-        existing.status = status;
-        existing.message = message;
-        renderUrlStatus(url);
-      }
-    }
-
-    function renderUrlStatus(url) {
-      const status = urlStatuses.get(url);
-      if (!status) return;
-
-      const existingEl = document.querySelector(`[data-url="${CSS.escape(url)}"]`);
-      
-      const statusEl = existingEl || document.createElement('div');
-      statusEl.className = 'url-status-item';
-      statusEl.dataset.url = url;
-      
-      const statusIcon = {
-        pending: '⏳',
-        loading: '🔄',
-        success: '✅',
-        error: '❌'
-      }[status.status] || '❓';
-      
-      statusEl.innerHTML = `
-        <div class="url-status-icon">${statusIcon}</div>
-        <div class="url-status-content">
-          <div class="url-text">${url}</div>
-          <div class="small">${status.message}</div>
+    // ---------- Status preview helpers ----------
+    function addUrlStatusPreview(url){
+      // if preview for same url exists, skip
+      if(previewContainer.querySelector(`.preview[data-url="${cssEscape(url)}"]`)) return;
+      const div = document.createElement('div');
+      div.className = 'preview';
+      div.dataset.url = url;
+      div.innerHTML = `
+        <div class="left"><div style="width:150px;height:90px;border-radius:8px;background:var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);">URL</div></div>
+        <div class="right">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="max-width:70%;word-break:break-all;"><strong>${escapeHtml(url)}</strong></div>
+            <div class="meta">
+              <div class="tag status" id="status-${encodeURIComponent(url)}">Queued</div>
+              <button class="btn secondary" id="retry-${encodeURIComponent(url)}" style="display:none">Retry</button>
+            </div>
+          </div>
+          <div class="muted small" id="msg-${encodeURIComponent(url)}">Waiting to fetch…</div>
         </div>
-        ${status.status === 'error' ? 
-          `<button class="btn btn-small btn-secondary" data-retry-url="${encodeURIComponent(url)}">Retry</button>` : 
-          ''
-        }
       `;
-      
-      if (!existingEl) {
-        previewContainer.appendChild(statusEl);
-      }
+      // put URL placeholders at top
+      previewContainer.prepend(div);
 
-      // Add retry handler
-      const retryBtn = statusEl.querySelector(`[data-retry-url]`);
-      if (retryBtn) {
-        retryBtn.onclick = () => retryUrl(url);
-      }
+      // attach retry handler
+      setTimeout(() => {
+        const retryBtn = document.getElementById(`retry-${encodeURIComponent(url)}`);
+        if(retryBtn) retryBtn.addEventListener('click', async () => {
+          updateUrlStatus(url, 'fetching', 'Retrying...');
+          try {
+            let blob;
+            try {
+              const resp = await fetch(url);
+              if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+              blob = await resp.blob();
+              if(!blob.type.startsWith('image/')) throw new Error('Not an image');
+            } catch {
+              const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+              const proxyResp = await fetch(proxyUrl);
+              if(!proxyResp.ok) throw new Error(`CORS proxy failed: HTTP ${proxyResp.status}`);
+              blob = await proxyResp.blob();
+              if(!blob.type.startsWith('image/')) throw new Error('Not an image');
+            }
+            
+            let filename;
+            try {
+              const urlObj = new URL(url);
+              const pathname = urlObj.pathname;
+              filename = pathname.split('/').pop() || 'image';
+              if (!filename.includes('.')) {
+                const ext = fileExtFromMime(blob.type);
+                filename = `${filename}.${ext}`;
+              }
+            } catch {
+              const ext = fileExtFromMime(blob.type);
+              filename = `image-${Date.now()}.${ext}`;
+            }
+            
+            const file = new File([blob], filename, { type: blob.type });
+            allFiles.push(file);
+            updateUrlStatus(url, 'done', 'Fetched ✓');
+            renderPreviews();
+            updateInfoText();
+            clearError();
+          } catch (err) {
+            updateUrlStatus(url, 'error', String(err));
+            showError('Retry failed. Many servers block cross-origin fetches. Use a CORS-enabled URL or a proxy.');
+          }
+        });
+      }, 50);
     }
 
-    async function retryUrl(url) {
-      try {
-        updateUrlStatus(url, 'loading', 'Retrying...');
-        const response = await fetch(url, { mode: 'cors' });
-        
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        
-        const blob = await response.blob();
-        if (!blob.type.startsWith('image/')) throw new Error('Not an image');
-        
-        const filename = extractFilenameFromURL(url) || `image-${Date.now()}.${blob.type.split('/')[1]}`;
-        const file = new File([blob], filename, { type: blob.type });
-        
-        allFiles.push(file);
-        updateUrlStatus(url, 'success', 'Downloaded successfully');
-        updateUI();
-        showAlert('URL retry successful', 'success');
-        
-      } catch (error) {
-        updateUrlStatus(url, 'error', error.message);
-        showAlert('Retry failed: ' + error.message);
+    function updateUrlStatus(url, status, message){
+      fetchingMap.set(url, { status, message });
+      const esc = encodeURIComponent(url);
+      const statusEl = document.getElementById(`status-${esc}`);
+      const msgEl = document.getElementById(`msg-${esc}`);
+      const retryBtn = document.getElementById(`retry-${esc}`);
+      if(statusEl) {
+        statusEl.textContent = status === 'done' ? 'Done' : (status === 'fetching' ? 'Fetching' : (status === 'error' ? 'Error' : status));
+        statusEl.className = status === 'error' ? 'tag status error' : 'tag status';
       }
+      if(msgEl) msgEl.textContent = message || '';
+      if(retryBtn) retryBtn.style.display = status === 'error' ? 'inline-flex' : 'none';
     }
 
-    // ---------- Optimization ----------
-    async function optimizeAllImages() {
-      if (allFiles.length === 0) {
-        showAlert('No images to optimize');
-        return;
-      }
+    // css escape util
+    function cssEscape(s) { return s.replace(/([^\w-])/g, m => '\\' + m); }
 
+    // ---------- Render previews for allFiles ----------
+    function renderPreviews(){
+      // Clear all previews that are file-based (keep URL status previews)
+      // We'll remove all existing file previews and recreate to keep indexes stable
+      // Remove any preview that doesn't have data-url attr (those are file previews)
+      const urlNodes = Array.from(previewContainer.querySelectorAll('.preview[data-url]'));
+      previewContainer.innerHTML = '';
+      // re-add URL nodes
+      urlNodes.forEach(nd => previewContainer.appendChild(nd));
+
+      allFiles.forEach((file, idx) => {
+        // prevent duplicate render if already exists (based on file.name + size)
+        if(previewContainer.querySelector(`.preview[data-file="${escapeHtml(file.name)}_${file.size}"]`)) return;
+
+        const div = document.createElement('div');
+        div.className = 'preview';
+        div.dataset.file = `${escapeHtml(file.name)}_${file.size}`;
+
+        const objectUrl = URL.createObjectURL(file);
+
+        div.innerHTML = `
+          <div class="left">
+            <img src="${objectUrl}" alt="${escapeHtml(file.name)}" />
+            <div class="muted small">${(file.size/1024).toFixed(1)} KB</div>
+          </div>
+          <div class="right">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="max-width:70%;word-break:break-all;"><strong>${escapeHtml(file.name)}</strong></div>
+              <div class="meta">
+                <div class="tag">${escapeHtml(file.type || 'unknown')}</div>
+                <button class="btn secondary" data-remove="${escapeHtml(file.name)}_${file.size}">Remove</button>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:12px;align-items:center;margin-top:8px;">
+              <div style="flex:1;">
+                <div class="small muted">Optimized preview</div>
+                <img id="optimg-${idx}" alt="optimized-${idx}" style="max-width:220px;margin-top:8px;border-radius:6px;border:1px solid var(--border);" />
+                <div class="muted small" id="optsz-${idx}" style="margin-top:6px"></div>
+              </div>
+
+              <div style="min-width:120px;display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+                <a id="dl-${idx}" class="download-link" style="display:none" download>Download</a>
+                <div style="width:100%;display:flex;gap:6px;">
+                  <button class="btn" data-optimize-one="${idx}" style="flex:1">Optimize</button>
+                  <button class="btn secondary" data-preview="${idx}" style="flex:1">Open</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        previewContainer.appendChild(div);
+
+        // Attach remove handler
+        const removeBtn = div.querySelector(`[data-remove="${escapeHtml(file.name)}_${file.size}"]`);
+        if(removeBtn){
+          removeBtn.addEventListener('click', () => {
+            allFiles = allFiles.filter(f => !(f.name === file.name && f.size === file.size));
+            renderPreviews();
+            updateInfoText();
+          });
+        }
+
+        // Attach optimize single handler
+        const optOne = div.querySelector(`[data-optimize-one="${idx}"]`);
+        if(optOne){
+          optOne.addEventListener('click', async () => {
+            try {
+              optOne.disabled = true;
+              optOne.textContent = 'Optimizing…';
+              const outputFormat = formatSelect.value;
+              const quality = outputFormat === 'image/png' ? undefined : (qualityInput.value / 100);
+              const { blob, name } = await optimizeSingleFile(file, outputFormat, quality);
+              optimizedBlobs.push({ blob, name });
+              const optImg = document.getElementById(`optimg-${idx}`);
+              const optSz = document.getElementById(`optsz-${idx}`);
+              const dl = document.getElementById(`dl-${idx}`);
+              if(optImg) optImg.src = URL.createObjectURL(blob);
+              if(optSz) optSz.textContent = `${(blob.size/1024).toFixed(1)} KB • ${outputFormat.split('/')[1].toUpperCase()}`;
+              if(dl) { 
+                dl.href = URL.createObjectURL(blob); 
+                dl.download = name; 
+                dl.style.display = 'inline-block'; 
+                dl.textContent = 'Download'; 
+              }
+            } catch (err) {
+              console.warn('Single optimize error', err);
+              showError('Failed to optimize image. See console for details.');
+            } finally {
+              optOne.disabled = false;
+              optOne.textContent = 'Optimize';
+              if(optimizedBlobs.length > 0) downloadAllBtn.style.display = 'inline-block';
+            }
+          });
+        }
+
+        // Attach open preview (in new tab)
+        const previewBtn = div.querySelector(`[data-preview="${idx}"]`);
+        if(previewBtn){
+          previewBtn.addEventListener('click', () => {
+            window.open(objectUrl, '_blank');
+          });
+        }
+      });
+    }
+
+    // ---------- Optimize all ----------
+    optimizeBtn.addEventListener('click', () => optimizeAll());
+    async function optimizeAll(){
+      clearError();
+      if(allFiles.length === 0) return showError('No images loaded to optimize.');
       optimizeBtn.disabled = true;
-      optimizeBtn.innerHTML = '<span class="spinner"></span> Optimizing...';
+      optimizeBtn.textContent = 'Optimizing…';
       optimizedBlobs = [];
-      
+      downloadAllBtn.style.display = 'none';
       const outputFormat = formatSelect.value;
       const quality = outputFormat === 'image/png' ? undefined : (qualityInput.value / 100);
-      
-      let successCount = 0;
-      let failCount = 0;
 
-      for (let i = 0; i < allFiles.length; i++) {
+      // process sequentially
+      for(let i=0;i<allFiles.length;i++){
         const file = allFiles[i];
-        const previewItem = document.querySelector(`[data-file-index="${i}"]`);
-        
-        if (previewItem) {
-          const statusEl = previewItem.querySelector('.optimization-status');
-          if (statusEl) {
-            statusEl.textContent = 'Optimizing...';
-            statusEl.className = 'status-badge status-loading';
-          }
-        }
-
         try {
-          const result = await optimizeImage(file, outputFormat, quality);
-          optimizedBlobs.push(result);
-          successCount++;
-          
-          if (previewItem) {
-            updatePreviewOptimization(previewItem, result);
-          }
-        } catch (error) {
-          console.error('Optimization failed:', error);
-          failCount++;
-          
-          if (previewItem) {
-            const statusEl = previewItem.querySelector('.optimization-status');
-            if (statusEl) {
-              statusEl.textContent = 'Failed';
-              statusEl.className = 'status-badge status-error';
+          const { blob, name } = await optimizeSingleFile(file, outputFormat, quality);
+          optimizedBlobs.push({ blob, name });
+
+          // update UI for that index (find position by file.name + size)
+          const node = previewContainer.querySelector(`.preview[data-file="${escapeHtml(file.name)}_${file.size}"]`);
+          if(node){
+            // find index in current render order
+            const index = Array.from(previewContainer.querySelectorAll('.preview')).indexOf(node);
+            const optImg = node.querySelector(`#optimg-${index}`);
+            const optSz = node.querySelector(`#optsz-${index}`);
+            const dl = node.querySelector(`#dl-${index}`);
+            if(optImg) optImg.src = URL.createObjectURL(blob);
+            if(optSz) optSz.textContent = `${(blob.size/1024).toFixed(1)} KB • ${outputFormat.split('/')[1].toUpperCase()}`;
+            if(dl) { 
+              dl.href = URL.createObjectURL(blob); 
+              dl.download = name; 
+              dl.style.display = 'inline-block'; 
+              dl.textContent = 'Download'; 
             }
           }
+        } catch (err) {
+          console.warn('Optimize error', allFiles[i].name, err);
+          // continue processing others
         }
+      }
+
+      if(optimizedBlobs.length > 0) {
+        downloadAllBtn.style.display = 'inline-block';
+      } else {
+        showError('No images were successfully optimized.');
       }
 
       optimizeBtn.disabled = false;
-      optimizeBtn.textContent = '✨ Optimize All Images';
-      
-      downloadAllBtn.classList.remove('hidden');
-      
-      showAlert(
-        `Optimization complete: ${successCount} successful, ${failCount} failed`,
-        failCount === 0 ? 'success' : 'error'
-      );
+      optimizeBtn.textContent = 'Optimize Images';
     }
 
-    async function optimizeImage(file, outputFormat, quality) {
+    // ---------- Optimize single file helper ----------
+    function optimizeSingleFile(file, outputFormat, quality){
       return new Promise((resolve, reject) => {
         const img = new Image();
         const objectUrl = URL.createObjectURL(file);
         
+        // Allow loading images from different origins
+        img.crossOrigin = 'anonymous';
+        
         img.onload = () => {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width;
-          canvas.height = img.height;
-          
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0);
-          
-          canvas.toBlob(
-            (blob) => {
-              URL.revokeObjectURL(objectUrl);
-              
-              if (!blob) {
-                reject(new Error('Failed to create blob'));
-                return;
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+
+            // FIX 2: Use original filename with new extension
+            const optimizedName = getOptimizedFileName(file.name, outputFormat);
+
+            if(canvas.toBlob){
+              try {
+                canvas.toBlob((blob) => {
+                  if(!blob) {
+                    // fallback to toDataURL
+                    try {
+                      const dataUrl = canvas.toDataURL(outputFormat, quality);
+                      const fallback = dataURLToBlob(dataUrl);
+                      URL.revokeObjectURL(objectUrl);
+                      resolve({ blob: fallback, name: optimizedName });
+                    } catch (e) {
+                      URL.revokeObjectURL(objectUrl);
+                      reject(e);
+                    }
+                    return;
+                  }
+                  
+                  if(outputFormat && blob.type !== outputFormat){
+                    try {
+                      const dataUrl = canvas.toDataURL(outputFormat, quality);
+                      const converted = dataURLToBlob(dataUrl);
+                      URL.revokeObjectURL(objectUrl);
+                      resolve({ blob: converted, name: optimizedName });
+                    } catch (e){
+                      const name = getOptimizedFileName(file.name, blob.type);
+                      URL.revokeObjectURL(objectUrl);
+                      resolve({ blob, name });
+                    }
+                  } else {
+                    URL.revokeObjectURL(objectUrl);
+                    resolve({ blob, name: optimizedName });
+                  }
+                }, outputFormat, quality);
+              } catch (err) {
+                try {
+                  const dataUrl = canvas.toDataURL(outputFormat, quality);
+                  const blob = dataURLToBlob(dataUrl);
+                  URL.revokeObjectURL(objectUrl);
+                  resolve({ blob, name: optimizedName });
+                } catch(e){
+                  URL.revokeObjectURL(objectUrl);
+                  reject(e);
+                }
               }
-              
-              // Preserve original filename with new extension
-              const originalName = file.name.replace(/\.[^/.]+$/, '');
-              const extension = outputFormat.split('/')[1];
-              const newFilename = `${originalName}.${extension}`;
-              
-              resolve({
-                blob,
-                filename: newFilename,
-                originalSize: file.size,
-                optimizedSize: blob.size,
-                reduction: ((file.size - blob.size) / file.size * 100).toFixed(1)
-              });
-            },
-            outputFormat,
-            quality
-          );
+            } else {
+              try {
+                const dataUrl = canvas.toDataURL(outputFormat, quality);
+                const blob = dataURLToBlob(dataUrl);
+                URL.revokeObjectURL(objectUrl);
+                resolve({ blob, name: optimizedName });
+              } catch(e){
+                URL.revokeObjectURL(objectUrl);
+                reject(e);
+              }
+            }
+          } catch (err) {
+            URL.revokeObjectURL(objectUrl);
+            reject(err);
+          }
         };
-        
-        img.onerror = () => {
+        img.onerror = (ev) => {
           URL.revokeObjectURL(objectUrl);
-          reject(new Error('Failed to load image'));
+          reject(new Error('Failed to load image into canvas (CORS or corrupt file).'));
         };
-        
         img.src = objectUrl;
       });
     }
 
-    // ---------- UI Updates ----------
-    function updateUI() {
-      imageCount.textContent = allFiles.length;
-      infoText.textContent = allFiles.length === 0 
-        ? 'No images loaded' 
-        : `${allFiles.length} image(s) ready for optimization`;
-      
-      renderFilePreviews();
+    // ---------- dataURL -> Blob ----------
+    function dataURLToBlob(dataURL){
+      const parts = dataURL.split(',');
+      const mime = parts[0].match(/:(.*?);/)[1];
+      const binary = atob(parts[1]);
+      const array = new Uint8Array(binary.length);
+      for(let i=0;i<binary.length;i++) array[i] = binary.charCodeAt(i);
+      return new Blob([array], { type: mime });
     }
 
-    function renderFilePreviews() {
-      // Clear only file previews, keep URL status items
-      const filePreviews = previewContainer.querySelectorAll('[data-file-index]');
-      filePreviews.forEach(el => el.remove());
-      
-      // Render all files
-      allFiles.forEach((file, index) => {
-        const previewEl = createFilePreview(file, index);
-        previewContainer.appendChild(previewEl);
-      });
-    }
-
-    function createFilePreview(file, index) {
-      const objectUrl = URL.createObjectURL(file);
-      const previewEl = document.createElement('div');
-      previewEl.className = 'preview-item';
-      previewEl.dataset.fileIndex = index;
-      
-      const optimizedData = optimizedBlobs[index];
-      
-      previewEl.innerHTML = `
-        <div class="preview-grid">
-          <div class="preview-image">
-            <img src="${objectUrl}" alt="${file.name}" loading="lazy">
-          </div>
-          
-          <div class="preview-content">
-            <div class="preview-header-row">
-              <div class="file-info">
-                <div class="file-name">${escapeHtml(file.name)}</div>
-                <div class="file-meta">
-                  <span>${(file.size / 1024).toFixed(1)} KB</span>
-                  <span>•</span>
-                  <span>${file.type || 'Unknown'}</span>
-                </div>
-              </div>
-              
-              <div class="status-badge ${optimizedData ? 'status-success' : 'status-pending'} optimization-status">
-                ${optimizedData ? 'Optimized' : 'Pending'}
-              </div>
-            </div>
-            
-            ${optimizedData ? `
-              <div class="optimization-panel">
-                <div class="optimization-info">
-                  <div class="optimization-stats">
-                    <span class="success">↓ ${optimizedData.reduction}%</span>
-                    <span>•</span>
-                    <span>${(optimizedData.optimizedSize / 1024).toFixed(1)} KB</span>
-                  </div>
-                  <div class="small">${formatSelect.value.split('/')[1].toUpperCase()}</div>
-                </div>
-                
-                <div class="optimization-actions">
-                  <a href="${URL.createObjectURL(optimizedData.blob)}" 
-                     download="${optimizedData.filename}"
-                     class="btn btn-small btn-primary">
-                    ⬇️ Download
-                  </a>
-                </div>
-              </div>
-            ` : ''}
-            
-            <div class="file-actions mt-4">
-              <button class="btn btn-small btn-secondary" data-remove="${index}">
-                Remove
-              </button>
-              <button class="btn btn-small btn-secondary" data-preview="${index}">
-                Preview
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-      
-      // Add event listeners
-      const removeBtn = previewEl.querySelector('[data-remove]');
-      const previewBtn = previewEl.querySelector('[data-preview]');
-      
-      removeBtn.addEventListener('click', () => {
-        allFiles.splice(index, 1);
-        optimizedBlobs.splice(index, 1);
-        updateUI();
-      });
-      
-      previewBtn.addEventListener('click', () => {
-        window.open(objectUrl, '_blank');
-      });
-      
-      return previewEl;
-    }
-
-    function updatePreviewOptimization(previewEl, result) {
-      const statusEl = previewEl.querySelector('.optimization-status');
-      const optimizationPanel = previewEl.querySelector('.optimization-panel');
-      
-      if (statusEl) {
-        statusEl.textContent = 'Optimized';
-        statusEl.className = 'status-badge status-success';
-      }
-      
-      if (!optimizationPanel) {
-        const contentDiv = previewEl.querySelector('.preview-content');
-        const optimizationHtml = `
-          <div class="optimization-panel">
-            <div class="optimization-info">
-              <div class="optimization-stats">
-                <span class="success">↓ ${result.reduction}%</span>
-                <span>•</span>
-                <span>${(result.optimizedSize / 1024).toFixed(1)} KB</span>
-              </div>
-              <div class="small">${formatSelect.value.split('/')[1].toUpperCase()}</div>
-            </div>
-            
-            <div class="optimization-actions">
-              <a href="${URL.createObjectURL(result.blob)}" 
-                 download="${result.filename}"
-                 class="btn btn-small btn-primary">
-                ⬇️ Download
-              </a>
-            </div>
-          </div>
-        `;
-        
-        const fileActions = previewEl.querySelector('.file-actions');
-        if (fileActions) {
-          fileActions.insertAdjacentHTML('beforebegin', optimizationHtml);
-        }
-      }
-    }
-
-    // ---------- Download All ----------
-    async function downloadAllAsZip() {
-      if (optimizedBlobs.length === 0) {
-        showAlert('No optimized images to download');
-        return;
-      }
-
+    // ---------- Download all as ZIP ----------
+    downloadAllBtn.addEventListener('click', async () => {
+      if(optimizedBlobs.length === 0) return showError('No optimized images available to download. Optimize images first.');
       downloadAllBtn.disabled = true;
-      downloadAllBtn.innerHTML = '<span class="spinner"></span> Creating ZIP...';
-
+      downloadAllBtn.textContent = 'Preparing ZIP…';
       try {
         const zip = new JSZip();
-        
-        optimizedBlobs.forEach(item => {
-          zip.file(item.filename, item.blob);
-        });
-        
+        optimizedBlobs.forEach(item => zip.file(item.name, item.blob));
         const content = await zip.generateAsync({ type: 'blob' });
-        saveAs(content, `optimized-images-${Date.now()}.zip`);
-        
-        showAlert('ZIP file created successfully!', 'success');
-      } catch (error) {
-        console.error('ZIP creation failed:', error);
-        showAlert('Failed to create ZIP file');
+        saveAs(content, 'optimized_images.zip');
+      } catch (err) {
+        console.error(err);
+        showError('Failed to create ZIP file.');
       } finally {
         downloadAllBtn.disabled = false;
-        downloadAllBtn.textContent = '📦 Download All as ZIP';
+        downloadAllBtn.textContent = 'Download All as ZIP';
+      }
+    });
+
+    // ---------- Clear ----------
+    clearBtn.addEventListener('click', () => {
+      if(!confirm('Clear all loaded images and previews?')) return;
+      allFiles = [];
+      optimizedBlobs = [];
+      fetchingMap.clear();
+      previewContainer.innerHTML = '';
+      clearError();
+      downloadAllBtn.style.display = 'none';
+      updateInfoText();
+    });
+
+    // ---------- Helper: convert fetched blobs to Files (not strictly necessary but keeps uniform) ----------
+    function blobToFile(blob, filename){
+      try { return new File([blob], filename, { type: blob.type }); }
+      catch(e){
+        // older browsers
+        blob.name = filename;
+        blob.lastModified = Date.now();
+        return blob;
       }
     }
 
-    // ---------- Event Listeners ----------
-    function initEventListeners() {
-      // Quality slider
-      qualityInput.addEventListener('input', () => {
-        qualityValue.textContent = `${qualityInput.value}%`;
-      });
-
-      // URL processing
-      addUrlsBtn.addEventListener('click', processURLs);
-      
-      urlFile.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        try {
-          const text = await file.text();
-          urlArea.value = text;
-          await processURLs();
-        } catch (error) {
-          showAlert('Failed to read URL file');
-        }
-        
-        urlFile.value = '';
-      });
-
-      // File upload
-      uploadInput.addEventListener('change', (e) => {
-        handleFileSelect(e.target.files);
-        uploadInput.value = '';
-      });
-
-      // Drag and drop
-      dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.classList.add('drag-over');
-      });
-
-      dropZone.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('drag-over');
-      });
-
-      dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('drag-over');
-        handleFileSelect(e.dataTransfer.files);
-      });
-
-      dropZone.addEventListener('click', () => {
-        uploadInput.click();
-      });
-
-      // Optimization
-      optimizeBtn.addEventListener('click', optimizeAllImages);
-
-      // Download all
-      downloadAllBtn.addEventListener('click', downloadAllAsZip);
-
-      // Clear all
-      clearBtn.addEventListener('click', () => {
-        if (allFiles.length === 0 && urlStatuses.size === 0) {
-          showAlert('Nothing to clear');
-          return;
-        }
-
-        if (confirm('Clear all images and results?')) {
-          allFiles = [];
-          optimizedBlobs = [];
-          urlStatuses.clear();
-          updateUI();
-          previewContainer.innerHTML = '';
-          downloadAllBtn.classList.add('hidden');
-          showAlert('All cleared', 'success');
-        }
-      });
+    // ---------- CSS-safe encode ----------
+    function encodeForId(s){
+      return encodeURIComponent(s).replace(/%/g,'_');
     }
 
-    // ---------- Utility Functions ----------
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
+    // ---------- bootstrap: expose fetch via console if needed ----------
+    window.__imgopt = { allFiles, optimizedBlobs };
 
-    // ---------- Initialization ----------
-    function init() {
-      initTheme();
-      initEventListeners();
-      updateUI();
-    }
+    // ---------- initial state ----------
+    updateInfoText();
 
-    // Start the application
-    init();
+    // ---------- Notes in console ----------
+    console.info('Multiple Image Optimizer loaded. Note: remote URL fetches may fail due to CORS; use CORS-enabled URLs or proxy if needed.');
   })();
   </script>
 </body>
